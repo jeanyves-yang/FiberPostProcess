@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+<category>Diffusion.FiberAnalysis</category>
+<title>Fiber Post Processing</title>
+<description>Removes fibers outside of a mask</description>
+<contributor>
+Jean-Yves Yang
+</contributor>
+<parameters>
+  <label>IO</label>
+  <description>Input/Output parameters</description>
+
+  <file>
+    <name>input_fiber_file</name>
+    <longflag>--input_fiber_file</longflag>
+    <label>Input Fiber File</label>
+    <channel>input</channel>
+    <flag>i</flag>
+    <description>input fiber file in .vtk or .vtp</description>
+  </file>
+
+  <file>
+    <name>output_fiber_file</name>
+    <longflag>--output_fiber_file</longflag>
+    <label>Output Fiber File</label>
+    <channel>output</channel>
+    <flag>o</flag>
+    <description>output fiber file in .vtk or .vtp</description>
+  </file>
+
+  <file>
+    <name>fiber_mask_file</name>
+    <longflag>--fiber_mask_file</longflag>
+    <label>Fiber Mask File</label>
+    <channel>input</channel>
+    <flag>m</flag>
+    <description>fiber mask file in .vtk or .vtp</description>
+  </file>
+
+
+</parameters>
+
+</executable>
+
+
