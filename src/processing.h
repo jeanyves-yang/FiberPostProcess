@@ -12,6 +12,5 @@ public:
                          std::string& output_file,
                          std::string& mask_file
                                      ) ;
-    void test( std::string& mask ) ;
     void convertVTKtoITKspace(vtkSmartPointer<vtkPolyData> PolyData , std::string maskFileName) ;
 };
