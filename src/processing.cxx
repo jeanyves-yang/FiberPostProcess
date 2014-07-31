@@ -64,7 +64,7 @@ void processing::FindAllData( T polydata )
 
 /*vtkSmartPointer< vtkPolyData >*/ void processing::readFiberFile( vtkSmartPointer < vtkPolyData > PolyData , std::string fiberFile , std::string maskFile )
 {
-    typedef itk::Image< unsigned char , 3 > ImageType ;
+    typedef itk::Image< int , 3 > ImageType ;
     typedef itk::ImageFileReader< ImageType > ReaderType ;
     ReaderType::Pointer readerMask = ReaderType::New() ;
     readerMask->SetFileName( maskFile ) ;
@@ -73,12 +73,13 @@ void processing::FindAllData( T polydata )
     maskImage = readerMask->GetOutput() ;
     typedef itk::Index< 3 > IndexType ;
     ImageType::IndexType index ;
-    /*typedef itk::LinearInterpolateImageFunction< ImageType , double > InterpolationType ;
+    typedef itk::LinearInterpolateImageFunction< ImageType , double > InterpolationType ;
     InterpolationType::Pointer interp = InterpolationType::New() ;
-    interp->SetInputImage( maskImage ) ;*/
+    interp->SetInputImage( maskImage ) ;
     itk::Point< double , 3 > p ;
     vtkSmartPointer < vtkPolyData > fiberPolyData = vtkSmartPointer< vtkPolyData >::New() ;
     std::string extension = ExtensionofFile( fiberFile ) ;
+
     /*if( extension.compare( mask_file ) == 0 )
     {
         std::cout << "The mask does not have the same extension as the input file." << std::endl ;
@@ -115,6 +116,7 @@ void processing::FindAllData( T polydata )
     const int nfib = PolyData->GetNumberOfCells() ;
     for( int i = 0 ; i < nfib ; ++i )
     {
+        std::cout << "                      FIBER NUMBER " << i << std::endl ;
         vtkSmartPointer< vtkCell > fiber = PolyData->GetCell( i ) ;
         vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
         for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )
@@ -128,15 +130,21 @@ void processing::FindAllData( T polydata )
             p[1] = coordinates[1] ;
             p[2] = coordinates[2] ;
             maskImage->TransformPhysicalPointToIndex( p , index ) ;
-            std::cout << index << std::endl ;
+            //std::cout << index << std::endl ;
             if( !interp->IsInsideBuffer( index ) )
             {
-                std::cout << "Index out of bounds" << std::endl ;
+                //std::cout << "Index out of bounds" << std::endl ;
             }
             else
             {
-                std::cout << "Index is in the bounds" << std::endl ;
+                //std::cout << "Index is in the bounds" << std::endl ;
             }
+            ImageType::PixelType pixel = maskImage->GetPixel( index ) ;
+            if(pixel == 255)
+            {
+                std::cout << "p[0] = " << pixel << std::endl ;
+            }
+
         }
     }
 
