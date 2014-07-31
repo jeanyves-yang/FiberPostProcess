@@ -161,7 +161,7 @@ void processing::FindAllData( T polydata )
         // Reading the data inserted
         vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
         fiberReadArray = vtkDoubleArray::SafeDownCast( PolyData->GetCellData()->GetArray("UnwantedFiber") ) ;
-        std::cout << "% of the fiber outside of the mask = " << fiberReadArray->GetValue( 0 ) ;
+        std::cout << "% of the fiber outside of the mask = " << fiberReadArray->GetValue( 0 ) << "%" <<std::endl ;
     }
 
 }
