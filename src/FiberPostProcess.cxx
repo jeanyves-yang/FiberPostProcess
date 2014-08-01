@@ -26,7 +26,7 @@ int main( int argc , char* argv[] )
 {
   PARSE_ARGS ;
   processing* FiberProcessing = new processing ;
-  FiberProcessing->processing_main( input_fiber_file , output_fiber_file, fiber_mask_file ) ;
+  FiberProcessing->processing_main( inputFiberFileName , outputFiberFileName , MaskFileName ) ;
   return EXIT_SUCCESS ;
 }
 

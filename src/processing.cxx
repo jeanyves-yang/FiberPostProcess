@@ -39,8 +39,8 @@ std::string processing::ExtensionofFile( std::string filename )
     return extension ;
 }
 
-template< class T> //vtkpolydata
-void processing::FindAllData( T polydata )
+
+void processing::FindAllData( vtkSmartPointer< vtkPolyData > polydata )
 {
     polydata->GetLines()->InitTraversal() ;
     std::cout << "Normals: " << polydata->GetPointData()->GetNormals() << std::endl ;
@@ -64,13 +64,30 @@ void processing::FindAllData( T polydata )
         }
     }
 }
+template <class T>
+vtkSmartPointer< vtkPolyData > processing::readFiberFile( T reader , std::string fiberFile )
+{
+    vtkSmartPointer< vtkPolyData > PolyData ;
+    reader->SetFileName( fiberFile.c_str() ) ;
+    PolyData=reader->GetOutput() ;
+    reader->Update() ;
+    return PolyData ;
+}
 
-/*vtkSmartPointer< vtkPolyData >*/ void processing::readFiberFile( vtkSmartPointer < vtkPolyData > PolyData , std::string fiberFile , std::string maskFile )
+void processing::writeFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName )
+{
+    vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
+    writer->SetInputData( PolyData ) ;
+    writer->SetFileName( outputFileName.c_str() ) ;
+    writer->Update() ;
+}
+
+vtkSmartPointer< vtkPolyData > processing::ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string maskFileName )
 {
     typedef itk::Image< int , 3 > ImageType ;
     typedef itk::ImageFileReader< ImageType > ReaderType ;
     ReaderType::Pointer readerMask = ReaderType::New() ;
-    readerMask->SetFileName( maskFile ) ;
+    readerMask->SetFileName( maskFileName ) ;
     readerMask->Update() ;
     ImageType::Pointer maskImage = ImageType::New() ;
     maskImage = readerMask->GetOutput() ;
@@ -80,52 +97,17 @@ void processing::FindAllData( T polydata )
     InterpolationType::Pointer interp = InterpolationType::New() ;
     interp->SetInputImage( maskImage ) ;
     itk::Point< double , 3 > p ;
-    std::string extension = ExtensionofFile( fiberFile ) ;
-
-    /*if( extension.compare( mask_file ) == 0 )
-    {
-        std::cout << "The mask does not have the same extension as the input file." << std::endl ;
-        return ;
-    }*/
-    /* Check the file extension */
-    if( extension.rfind("vtk") != std::string::npos )
-    {
-        vtkSmartPointer< vtkPolyDataReader > reader = vtkPolyDataReader::New() ;
-        reader->SetFileName( fiberFile.c_str() ) ;
-        PolyData=reader->GetOutput() ;
-        reader->Update() ;
-        std::cout << "VTK File read" << std::endl ;
-        //return fiberPolyData ;
-    }
-    else
-    {
-        if( extension.rfind("vtp") != std::string::npos )
-        {
-            vtkSmartPointer<vtkXMLPolyDataReader> reader = vtkXMLPolyDataReader::New() ;
-            reader->SetFileName( fiberFile.c_str() ) ;
-            PolyData = reader->GetOutput() ;
-            reader->Update() ;
-            std::cout << "VTP File read" << std::endl ;
-            //return fiberPolyData ;
-        }
-        else
-        {
-            std::cout << "File could not be read" << std::endl ;
-            //return fiberPolyData ;
-        }
-    }
-    /*    TEST                */
     const int nfib = PolyData->GetNumberOfCells() ;
+    std::cout<< nfib <<std::endl;
     for( int i = 0 ; i < nfib ; ++i )
     {
         float badPixel = 0.0f ;
-        std::cout << "                      FIBER NUMBER " << i << std::endl ;
+        std::cout << " FIBER NUMBER " << i << std::endl ;
         vtkSmartPointer< vtkCell > fiber = PolyData->GetCell( i ) ;
         vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
         for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )
         {
             double* coordinates = fiberPoints->GetPoint( j ) ;
-            //std::cout << coordinates[0] << " " << coordinates[1] << " " << coordinates[2] << std::endl;
             /* Flip the coordinates */
             coordinates[0] = - coordinates[0] ;
             coordinates[1] = - coordinates[1] ;
@@ -133,14 +115,13 @@ void processing::FindAllData( T polydata )
             p[1] = coordinates[1] ;
             p[2] = coordinates[2] ;
             maskImage->TransformPhysicalPointToIndex( p , index ) ;
-            //std::cout << index << std::endl ;
+            //Checks if the index is inside the image boundaries
             if( !interp->IsInsideBuffer( index ) )
             {
-                //std::cout << "Index out of bounds" << std::endl ;
+                std::cout << "Index out of bounds" << std::endl ;
             }
             else
             {
-                //std::cout << "Index is in the bounds" << std::endl ;
             }
             ImageType::PixelType pixel = maskImage->GetPixel( index ) ;
             if(pixel == 255)
@@ -149,7 +130,6 @@ void processing::FindAllData( T polydata )
             }
         }
         std::cout << "Pixels out of mask = " << badPixel << std::endl ;
-        std::cout << "% of the fiber outside of the mask = " << badPixel/fiberPoints->GetNumberOfPoints()*100  << "%" << std::endl ;
         // Inserting an array corresponding to the % of the fiber which is not inside the mask
         vtkSmartPointer< vtkCellArray > bundleOfFibers = vtkSmartPointer< vtkCellArray >::New() ;
         bundleOfFibers->InsertNextCell( fiber ) ;
@@ -162,67 +142,37 @@ void processing::FindAllData( T polydata )
         vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
         fiberReadArray = vtkDoubleArray::SafeDownCast( PolyData->GetCellData()->GetArray("UnwantedFiber") ) ;
         std::cout << "% of the fiber outside of the mask = " << fiberReadArray->GetValue( 0 ) << "%" <<std::endl ;
-    }
 
+    }
+    return PolyData ;
 }
 
-
-    /*FindAllData( PolyData ) ;
-
-   /**/
-
-    /*if( extension.rfind("vtk") != std::string::npos )
+void processing::processing_main(std::string& inputFileName ,
+                                 std::string& outputFileName ,
+                                 std::string& maskFileName
+                                 )
+{
+    typedef itk::Image< int , 3 > ImageType ;
+    typedef itk::ImageFileReader< ImageType > ReaderType ;
+    vtkSmartPointer< vtkPolyData > fiberPolyData ;
+    std::string extension = ExtensionofFile( inputFileName ) ;
+    if( extension.rfind("vtk") != std::string::npos )
     {
-        vtkSmartPointer< vtkPolyDataWriter > fiberwriter = vtkPolyDataWriter::New() ;
-        fiberwriter->SetFileName( output_file.c_str() ) ;
-        fiberwriter->SetInputData(PolyData);
-        fiberwriter->Update() ;
-        std::cout << "VTK File written" << std::endl ;
+        vtkSmartPointer< vtkPolyDataReader > fiberPolyDataReader = vtkSmartPointer< vtkPolyDataReader >::New() ;
+        fiberPolyData = readFiberFile( fiberPolyDataReader, inputFileName ) ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        vtkSmartPointer<vtkXMLPolyDataReader> fiberPolyDataReader = vtkSmartPointer< vtkXMLPolyDataReader >::New() ;
+        fiberPolyData = readFiberFile( fiberPolyDataReader, inputFileName ) ;
     }
     else
     {
-        if( extension.rfind("vtp") != std::string::npos )
-        {
-            vtkSmartPointer< vtkXMLPolyDataWriter > fiberwriter = vtkXMLPolyDataWriter::New() ;
-            fiberwriter->SetFileName( output_file.c_str() ) ;
-            fiberwriter->SetInputData( PolyData ) ;
-            fiberwriter->Update() ;
-            std::cout << "VTP File written" << std::endl ;
-        }
-        else
-        {
-            std::cout << "File could not be written" << std::endl ;
-        }
-    }*/
-
-
-void processing::convertVTKtoITKspace( vtkSmartPointer < vtkPolyData > PolyData , std::string maskFileName )
-{
-    /* Gets the coordinates of each points per fiber */
-    const int nfib = PolyData->GetNumberOfCells() ;
-    for( int i = 0 ; i < nfib ; ++i )
-    {
-        //double [][] pointsCoord ;
-        vtkSmartPointer< vtkCell > fiber = PolyData->GetCell( i ) ;
-        vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
-        std::cout << "fiberPoints->GetNumberOfPoints()" << std::endl ;
-        for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )
-        {
-            double* coordinates = fiberPoints->GetPoint( j ) ;
-            std::cout << coordinates[0] << " " << coordinates[1] << " " << coordinates[2] << std::endl;
-            /* Flip the coordinates */
-            coordinates[0] = - coordinates[0] ;
-            coordinates[1] = - coordinates[1] ;
-        }
+        std::cout << "File could not be read" << std::endl ;
+        return ;
     }
-}
+    FindAllData( fiberPolyData ) ;
+    fiberPolyData = ApplyMaskToFiber( fiberPolyData , maskFileName ) ;
+    writeFiberFile( fiberPolyData , outputFileName ) ;
 
-
-void processing::processing_main(std::string& input_file ,
-                                 std::string& output_file ,
-                                 std::string& mask_file
-                                 )
-{
-    vtkSmartPointer < vtkPolyData > fiberPolyData = vtkSmartPointer< vtkPolyData >::New() ;
-    /*fiberPolyData =*/ readFiberFile( fiberPolyData, input_file, mask_file ) ;
 }

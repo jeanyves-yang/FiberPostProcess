@@ -11,30 +11,30 @@ Jean-Yves Yang
   <description>Input/Output parameters</description>
 
   <file>
-    <name>input_fiber_file</name>
-    <longflag>--input_fiber_file</longflag>
-    <label>Input Fiber File</label>
+    <name>inputFiberFileName</name>
+    <longflag>--inputFiberFileName</longflag>
+    <label>Input Fiber File Name</label>
     <channel>input</channel>
     <flag>i</flag>
-    <description>input fiber file in .vtk or .vtp</description>
+    <description>input fiber filename in .vtk or .vtp</description>
   </file>
 
   <file>
-    <name>output_fiber_file</name>
-    <longflag>--output_fiber_file</longflag>
-    <label>Output Fiber File</label>
+    <name>outputFiberFileName</name>
+    <longflag>--outputFiberFileName</longflag>
+    <label>Output Fiber File Name</label>
     <channel>output</channel>
     <flag>o</flag>
-    <description>output fiber file in .vtk or .vtp</description>
+    <description>output fiber filename in .vtk or .vtp</description>
   </file>
 
   <file>
-    <name>fiber_mask_file</name>
-    <longflag>--fiber_mask_file</longflag>
-    <label>Fiber Mask File</label>
+    <name>MaskFileName</name>
+    <longflag>--MaskFileName</longflag>
+    <label>Mask File Name</label>
     <channel>input</channel>
     <flag>m</flag>
-    <description>fiber mask file in .vtk or .vtp</description>
+    <description>mask filename in .nrrd, .nhdr, etc</description>
   </file>
 
 

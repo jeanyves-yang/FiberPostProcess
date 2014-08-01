@@ -5,12 +5,13 @@ class processing{
 public:
     ~processing() ;
     std::string ExtensionofFile(std::string filename) ;
+    void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     template< class T>
-    void FindAllData(T polydata ) ;
-    /*vtkSmartPointer< vtkPolyData >*/void readFiberFile(vtkSmartPointer<vtkPolyData> PolyData, std::string fiberFile , std::string maskFile ) ;
-    void processing_main(std::string& input_file ,
-                         std::string& output_file,
-                         std::string& mask_file
+    vtkSmartPointer< vtkPolyData > readFiberFile( T reader , std::string fiberFile ) ;
+    void writeFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
+    vtkSmartPointer< vtkPolyData > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string maskFileName ) ;
+    void processing_main(std::string& inputFileName ,
+                         std::string& outputFileName,
+                         std::string& maskFileName
                                      ) ;
-    void convertVTKtoITKspace(vtkSmartPointer<vtkPolyData> PolyData , std::string maskFileName) ;
 };
