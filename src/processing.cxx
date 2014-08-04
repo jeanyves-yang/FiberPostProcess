@@ -99,6 +99,9 @@ vtkSmartPointer< vtkPolyData > processing::ApplyMaskToFiber( vtkSmartPointer< vt
     itk::Point< double , 3 > p ;
     const int nfib = PolyData->GetNumberOfCells() ;
     std::cout<< nfib <<std::endl;
+    // Inserting an array corresponding to the % of the fiber which is not inside the mask
+    vtkSmartPointer< vtkCellArray > bundleOfFibers = vtkSmartPointer< vtkCellArray >::New() ;
+    vtkSmartPointer< vtkDoubleArray > fiberData = vtkSmartPointer< vtkDoubleArray >::New() ;
     for( int i = 0 ; i < nfib ; ++i )
     {
         float badPixel = 0.0f ;
@@ -130,20 +133,20 @@ vtkSmartPointer< vtkPolyData > processing::ApplyMaskToFiber( vtkSmartPointer< vt
             }
         }
         std::cout << "Pixels out of mask = " << badPixel << std::endl ;
-        // Inserting an array corresponding to the % of the fiber which is not inside the mask
-        vtkSmartPointer< vtkCellArray > bundleOfFibers = vtkSmartPointer< vtkCellArray >::New() ;
+
         bundleOfFibers->InsertNextCell( fiber ) ;
-        vtkSmartPointer< vtkDoubleArray > fiberData = vtkSmartPointer< vtkDoubleArray >::New() ;
-        fiberData->SetNumberOfComponents( 1 ) ;
+        fiberData->SetNumberOfComponents( nfib ) ;
         fiberData->SetName( "UnwantedFiber" ) ;
         fiberData->InsertNextValue( badPixel/fiberPoints->GetNumberOfPoints()*100 ) ;
-        PolyData->GetCellData()->AddArray( fiberData ) ;
+
         // Reading the data inserted
-        vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
+        /*vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
         fiberReadArray = vtkDoubleArray::SafeDownCast( PolyData->GetCellData()->GetArray("UnwantedFiber") ) ;
-        std::cout << "% of the fiber outside of the mask = " << fiberReadArray->GetValue( 0 ) << "%" <<std::endl ;
+        std::cout << "% of the fiber outside of the mask = " << fiberReadArray->GetValue( 0 ) << "%" <<std::endl ;*/
+        std::cout<< "% of the fiber outside of the mask = " << badPixel/fiberPoints->GetNumberOfPoints()*100 <<std::endl ;
 
     }
+    PolyData->GetCellData()->AddArray( fiberData ) ;
     return PolyData ;
 }
 
