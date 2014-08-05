@@ -53,7 +53,7 @@ void processing::FindAllData( vtkSmartPointer< vtkPolyData > polydata )
     std::cout << "Strips: " << polydata->GetNumberOfStrips() << std::endl ;
     std::cout << "Verts: " << polydata->GetNumberOfVerts() << std::endl ;
     int i=1;
-    while( polydata->GetLines()->GetNextCell(idList) )
+    while( polydata->GetLines()->GetNextCell( idList ) )
     {
         std::cout<< "Line " << i << ": " << idList->GetNumberOfIds() << " points" <<std::endl ;
         i++;
@@ -76,8 +76,9 @@ vtkSmartPointer< vtkPolyData > processing::readFiberFile( T reader , std::string
 
 void processing::writeFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName )
 {
-    vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
+    vtkSmartPointer< vtkXMLPolyDataWriter > writer = vtkSmartPointer< vtkXMLPolyDataWriter >::New() ;
     writer->SetInputData( PolyData ) ;
+    writer->SetDataModeToBinary() ;
     writer->SetFileName( outputFileName.c_str() ) ;
     writer->Update() ;
 }
@@ -140,14 +141,45 @@ vtkSmartPointer< vtkPolyData > processing::ApplyMaskToFiber( vtkSmartPointer< vt
         fiberData->InsertNextValue( badPixel/fiberPoints->GetNumberOfPoints()*100 ) ;
 
         // Reading the data inserted
-        /*vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
-        fiberReadArray = vtkDoubleArray::SafeDownCast( PolyData->GetCellData()->GetArray("UnwantedFiber") ) ;
-        std::cout << "% of the fiber outside of the mask = " << fiberReadArray->GetValue( 0 ) << "%" <<std::endl ;*/
-        std::cout<< "% of the fiber outside of the mask = " << badPixel/fiberPoints->GetNumberOfPoints()*100 <<std::endl ;
+        std::cout<< "% of the fiber outside of the mask = " << badPixel/fiberPoints->GetNumberOfPoints()*100 << "%" <<std::endl ;
 
     }
     PolyData->GetCellData()->AddArray( fiberData ) ;
     return PolyData ;
+}
+
+vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyData > PolyData , float threshold )
+{
+    const int nfib = PolyData->GetNumberOfCells() ;
+    vtkSmartPointer< vtkIdList > idList = vtkSmartPointer< vtkIdList >::New() ;
+    vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
+    fiberReadArray = vtkDoubleArray::SafeDownCast( PolyData->GetCellData()->GetArray("UnwantedFiber") ) ;
+    for( int i = 0 ; i < nfib ; ++i )
+    {
+        float badPixel = 0.0f ;
+        std::cout << " FIBER NUMBER " << i << std::endl ;
+        if( fiberReadArray->GetValue( i ) > threshold )
+        {
+            std::cout << "Deleted" <<std::endl ;
+            PolyData->DeleteCell( i ) ;
+        }
+    }
+    /*int i = 0 ;
+    while( PolyData->GetLines()->GetNextCell( idList ) )
+    {
+        for( vtkIdType pointId = 0 ; pointId < idList->GetNumberOfIds() ; pointId ++ )
+        {
+            if( fiberReadArray->GetValue( i ) < threshold )
+            {
+                PolyData->DeleteCell( i ) ;
+                std::cout <<idList->GetId( pointId ) << " " ;
+            }
+            i++ ;
+        }
+    }*/
+    PolyData->RemoveDeletedCells() ;
+    return PolyData ;
+
 }
 
 void processing::processing_main(std::string& inputFileName ,
@@ -175,6 +207,8 @@ void processing::processing_main(std::string& inputFileName ,
         return ;
     }
     FindAllData( fiberPolyData ) ;
+    fiberPolyData = ApplyMaskToFiber( fiberPolyData , maskFileName ) ;
+    fiberPolyData = CleanFiber(fiberPolyData , 6.0f ) ;
     fiberPolyData = ApplyMaskToFiber( fiberPolyData , maskFileName ) ;
     writeFiberFile( fiberPolyData , outputFileName ) ;
 
