@@ -7,35 +7,55 @@
 Jean-Yves Yang
 </contributor>
 <parameters>
-  <label>IO</label>
-  <description>Input/Output parameters</description>
+<label>IO</label>
+<description>Input/Output parameters</description>
 
   <file>
-    <name>inputFiberFileName</name>
-    <longflag>--inputFiberFileName</longflag>
-    <label>Input Fiber File Name</label>
-    <channel>input</channel>
-    <flag>i</flag>
-    <description>input fiber filename in .vtk or .vtp</description>
+  <name>inputFiberFileName</name>
+  <longflag>--inputFiberFileName</longflag>
+  <label>Input Fiber File Name</label>
+  <channel>input</channel>
+  <flag>i</flag>
+  <description>input fiber filename in .vtk or .vtp</description>
   </file>
 
   <file>
-    <name>outputFiberFileName</name>
-    <longflag>--outputFiberFileName</longflag>
-    <label>Output Fiber File Name</label>
-    <channel>output</channel>
-    <flag>o</flag>
-    <description>output fiber filename in .vtk or .vtp</description>
+  <name>outputFiberFileName</name>
+  <longflag>--outputFiberFileName</longflag>
+  <label>Output Fiber File Name</label>
+  <channel>output</channel>
+  <flag>o</flag>
+  <description>output fiber filename in .vtk or .vtp</description>
   </file>
 
   <file>
-    <name>MaskFileName</name>
-    <longflag>--MaskFileName</longflag>
-    <label>Mask File Name</label>
-    <channel>input</channel>
-    <flag>m</flag>
-    <description>mask filename in .nrrd, .nhdr, etc</description>
+  <name>MaskFileName</name>
+  <longflag>--MaskFileName</longflag>
+  <label>Mask File Name</label>
+  <channel>input</channel>
+  <flag>m</flag>
+  <description>mask filename in .nrrd, .nhdr, etc</description>
   </file>
+
+  <float>
+  <name>threshold</name>
+  <longflag>--threshold</longflag>
+  <label>Threshold value</label>
+  <channel>input</channel>
+  <flag>t</flag>
+  <description>Threshold value between 0 and 100%. If the percentage of the fiber outside of the mask is above this value, the fiber is removed.</description>
+  </float>
+
+  <integer>
+  <name>visualize</name>
+  <longflag>--visualize</longflag>
+  <label>Output File visualizable</label>
+  <channel>input</channel>
+  <flag>v</flag>
+  <default>0</default>
+  <description>Need to be set at 1 if you want to have an output file and its intersection with the mask visualizable through Slicer. lineData parameter must stay at its default value 0.</description>
+  </integer>
+
 
 
 </parameters>
