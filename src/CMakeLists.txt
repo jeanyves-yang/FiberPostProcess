@@ -30,7 +30,7 @@ SEMMacroBuildCLI(
   ADDITIONAL_SRCS ${CXX_FILES} ${H_FILES}
   TARGET_LIBRARIES ${ITK_LIBRARIES} ${VTK_LIBRARIES}
   )
-#option(BUILD_TESTING "Build the testing tree" ON)
+option(BUILD_TESTING "Build the testing tree" ON)
 
 #IF(BUILD_TESTING)
 #  include(CTest)

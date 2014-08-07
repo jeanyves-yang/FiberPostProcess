@@ -25,7 +25,7 @@
 int main( int argc , char* argv[] )
 {
   PARSE_ARGS ;
-  processing* FiberProcessing = new processing ;
+  processing* FiberProcessing = new processing( visualize ) ;
   FiberProcessing->processing_main( inputFiberFileName , outputFiberFileName , MaskFileName , threshold ) ;
   return EXIT_SUCCESS ;
 }

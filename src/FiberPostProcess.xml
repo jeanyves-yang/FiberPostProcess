@@ -12,7 +12,7 @@ Jean-Yves Yang
 
   <file>
   <name>inputFiberFileName</name>
-  <longflag>--inputFiberFileName</longflag>
+  <longflag>inputFiberFileName</longflag>
   <label>Input Fiber File Name</label>
   <channel>input</channel>
   <flag>i</flag>
@@ -21,7 +21,7 @@ Jean-Yves Yang
 
   <file>
   <name>outputFiberFileName</name>
-  <longflag>--outputFiberFileName</longflag>
+  <longflag>outputFiberFileName</longflag>
   <label>Output Fiber File Name</label>
   <channel>output</channel>
   <flag>o</flag>
@@ -30,7 +30,7 @@ Jean-Yves Yang
 
   <file>
   <name>MaskFileName</name>
-  <longflag>--MaskFileName</longflag>
+  <longflag>MaskFileName</longflag>
   <label>Mask File Name</label>
   <channel>input</channel>
   <flag>m</flag>
@@ -39,7 +39,7 @@ Jean-Yves Yang
 
   <float>
   <name>threshold</name>
-  <longflag>--threshold</longflag>
+  <longflag>threshold</longflag>
   <label>Threshold value</label>
   <channel>input</channel>
   <flag>t</flag>
@@ -48,7 +48,7 @@ Jean-Yves Yang
 
   <integer>
   <name>visualize</name>
-  <longflag>--visualize</longflag>
+  <longflag>visualize</longflag>
   <label>Output File visualizable</label>
   <channel>input</channel>
   <flag>v</flag>

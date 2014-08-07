@@ -2,8 +2,10 @@
 #include <vtkSmartPointer.h>
 
 class processing{
+    int visualize ;
 public:
-    ~processing() ;
+    processing( int ) ;
+
     std::string ExtensionofFile(std::string filename) ;
     void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     template< class T>
@@ -11,9 +13,11 @@ public:
     void writeFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
     vtkSmartPointer< vtkPolyData > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string maskFileName ) ;
     vtkSmartPointer< vtkPolyData > CleanFiber( vtkSmartPointer< vtkPolyData > PolyData , float threshold ) ;
+    vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > PolyData ) ;
+    vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > PolyData ) ;
     int processing_main(std::string& inputFileName ,
-                         std::string& outputFileName ,
-                         std::string& maskFileName ,
-                         float threshold
-                                     ) ;
+                        std::string& outputFileName ,
+                        std::string& maskFileName ,
+                        float threshold
+                        ) ;
 };
