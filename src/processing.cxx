@@ -170,7 +170,7 @@ vtkSmartPointer< vtkPolyData > processing::AddPointData( vtkSmartPointer< vtkPol
         vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
         for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )
         {
-            pointData->SetNumberOfComponents( PolyData->GetNumberOfPoints() ) ;
+            pointData->SetNumberOfComponents( 1 ) ;
             pointData->SetName( "InsideMask" ) ;
             pointData->InsertNextValue( 0 ) ;
         }
@@ -196,7 +196,6 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     Lines->InitTraversal() ;
     for( int i = 0 ; Lines->GetNextCell( NumberOfPoints , Ids ) ; i++ )
     {
-        std::cout<<"coucou";
         vtkSmartPointer< vtkPolyLine > NewLine = vtkSmartPointer< vtkPolyLine >::New() ;
         NewLine->GetPointIds()->SetNumberOfIds( NumberOfPoints ) ;
         std::cout << " FIBER NUMBER " << i << std::endl ;
