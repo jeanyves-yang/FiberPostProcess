@@ -46,6 +46,14 @@ std::string processing::ExtensionofFile( std::string filename )
     return extension ;
 }
 
+std::string processing::changeEndofFileName (std::string fileName, std::string change )
+{
+  std::string extension = ExtensionofFile( fileName ) ;
+  fileName.replace( fileName.end()-extension.length()-1 , fileName.end() , change ) ;
+  return fileName;
+}
+
+
 
 void processing::FindAllData( vtkSmartPointer< vtkPolyData > polydata )
 {
@@ -82,11 +90,22 @@ vtkSmartPointer< vtkPolyData > processing::readFiberFile( T reader , std::string
 
 void processing::writeFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName )
 {
-    vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
-    writer->SetInputData( PolyData ) ;
-    //writer->SetDataModeToBinary() ;
-    writer->SetFileName( outputFileName.c_str() ) ;
-    writer->Update() ;
+    std::string extension = ExtensionofFile( outputFileName ) ;
+    if( extension.rfind( "vtk" ) != std::string::npos )
+    {
+        vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
+        writer->SetInputData( PolyData ) ;
+        writer->SetFileName( outputFileName.c_str() ) ;
+        writer->Update() ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer< vtkXMLPolyDataWriter >::New() ;
+        writer->SetInputData( PolyData ) ;
+        writer->SetDataModeToBinary() ;
+        writer->SetFileName( outputFileName.c_str() ) ;
+        writer->Update() ;
+    }
 }
 
 vtkSmartPointer< vtkPolyData > processing::ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string maskFileName )
@@ -286,8 +305,24 @@ int processing::processing_main(std::string& inputFileName ,
     {
         visuFiber = CreateVisuFiber( fiberPolyData ) ;
     }
-    writeFiberFile( visuFiber , "visuFiber.vtk") ;
+    std::string visuFiberFileName , cleanedFiberFileName ;
+    if( extension.rfind( "vtk" ) != std::string::npos )
+    {
+        visuFiberFileName = changeEndofFileName( outputFileName , "-visu.vtk" ) ;
+        cleanedFiberFileName = changeEndofFileName( outputFileName , "-cleaned.vtk" ) ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        visuFiberFileName = changeEndofFileName( outputFileName , "-visu.vtp" ) ;
+        cleanedFiberFileName = changeEndofFileName( outputFileName , "-cleaned.vtp" ) ;
+    }
+    else
+    {
+        std::cout << "File could not be read" << std::endl ;
+        return 1 ;
+    }
+    writeFiberFile( visuFiber , visuFiberFileName) ;
     writeFiberFile( fiberPolyData , outputFileName ) ;
-    writeFiberFile( cleanedFiberPolyData , "cleanedFiber.vtk" ) ;
+    writeFiberFile( cleanedFiberPolyData , cleanedFiberFileName ) ;
     return 0 ;
 }

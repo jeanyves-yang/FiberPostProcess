@@ -7,6 +7,7 @@ public:
     processing( int ) ;
 
     std::string ExtensionofFile(std::string filename) ;
+    std::string changeEndofFileName ( std::string fileName, std::string change ) ;
     void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     template< class T>
     vtkSmartPointer< vtkPolyData > readFiberFile( T reader , std::string fiberFile ) ;
