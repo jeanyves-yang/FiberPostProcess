@@ -266,6 +266,7 @@ vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber( vtkSmartPointer< vtk
     }
     NewPolyData->SetPoints( NewPoints ) ;
     NewPolyData->SetLines( NewLines ) ;
+    PolyData->GetPointData()->GetAbstractArray( 1 )->SetName( "InsideMask" ) ;
     NewPolyData->GetPointData()->AddArray( PolyData->GetPointData()->GetAbstractArray( 1 ) ) ;
     return NewPolyData ;
 
