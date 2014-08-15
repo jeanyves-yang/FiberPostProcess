@@ -17,7 +17,7 @@ add_executable(FiberProcessingTest vtkTest.cxx)
 target_link_libraries(FiberProcessingTest FiberPostProcessLib)
 add_test(NAME FiberPostProcess COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
-  ${Input}#${BaselineNormalRun}
+  ${BaselineNormalRun}
   ${OutputCleaned}
   ModuleEntryPoint
   -i ${Input}

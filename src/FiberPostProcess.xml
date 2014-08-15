@@ -43,7 +43,7 @@ Jean-Yves Yang
   <label>Threshold value</label>
   <channel>input</channel>
   <flag>t</flag>
-  <description>Threshold value between 0 and 100%. If the percentage of the fiber outside of the mask is above this value, the fiber is removed.</description>
+  <description>Threshold value between 0 and 1. If the percentage of the fiber outside of the mask is above this value, the fiber is removed.</description>
   </float>
 
   <integer>
@@ -61,5 +61,3 @@ Jean-Yves Yang
 </parameters>
 
 </executable>
-
-
