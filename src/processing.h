@@ -1,12 +1,21 @@
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
+#include <sstream>
 
 class processing{
     int visualize ;
 public:
+    struct fileNameStruct{
+        std::string input ;
+        std::string mask ;
+        std::string visu ;
+        std::string output ;
+        std::string cleaned ;
+    };
+
     processing( int ) ;
-    std::string ExtensionOfFile(std::string filename) ;
-    std::string ChangeEndOfFileName ( std::string fileName, std::string change ) ;
+
+    void WriteLogFile( fileNameStruct fileName , std::vector< std::vector< float> > data , float threshold , vtkSmartPointer< vtkPolyData > cleanedFiberFile ) ;
     void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     int FindMaxNbOfPoints( vtkSmartPointer< vtkPolyData > polyData ) ;
     template< class T>
@@ -25,3 +34,7 @@ public:
                         float threshold
                         ) ;
 };
+template< class T >
+std::string Convert (T number) ;
+std::string ExtensionOfFile(std::string filename) ;
+std::string ChangeEndOfFileName ( std::string fileName, std::string change ) ;
