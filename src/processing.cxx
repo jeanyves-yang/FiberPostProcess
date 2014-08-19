@@ -58,31 +58,6 @@ std::string ChangeEndOfFileName (std::string fileName, std::string change )
     return fileName;
 }
 
-template< class T >
-std::string Convert ( T number )
-{
-    std::ostringstream buff ;
-    buff << number ;
-    return buff.str() ;
-}
-
-
-
-std::vector< std::vector < std::string  > > ConvertArray( std::vector< std::vector< float > > array )
-{
-    std::vector< std::vector < std::string  > > buffer ;
-    for( int i = 0 ; i < array.size() ; i++ )
-    {
-        std::vector< std::string > buff ;
-        for( int j = 0 ; j < array[i].size() ; j++ )
-        {
-            buff.push_back( Convert( array[ i ][ j ] ) ) ;
-        }
-        buffer.push_back( buff ) ;
-    }
-    return buffer ;
-}
-
 void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector< std::vector< float> > vecPointData , float threshold ,
                                vtkSmartPointer< vtkPolyData > cleanedFiberFile )
 {
@@ -108,30 +83,42 @@ void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector
         }
     }*/
     std::vector< std::vector < std::string > > data = ConvertArray( vecPointData ) ;
-    csv csvFile( "log.csv" ) ;
+    csv csvFile ;
+    std::vector< std::vector < std::string > > headerData ;
+    std::vector< std::string > buff ;
+    char logFileName[] = "log.csv" ;
+    buff.push_back("Fiber File Input: " ) ;
+    buff.push_back( fileName.input ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    buff.push_back( "Mask Input: " ) ;
+    buff.push_back( fileName.mask ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    buff.push_back( "Fiber File with improper fibers removed: " ) ;
+    buff.push_back( fileName.cleaned  ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    buff.push_back( "Fiber File Output (contains all the data): " ) ;
+    buff.push_back( fileName.output ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    buff.push_back( "Fiber File visualizable: " ) ;
+    buff.push_back( fileName.visu ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    buff.push_back( "Number of fibers before processing: " ) ;
+    buff.push_back( Convert( vecPointData.size() ) ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    buff.push_back( "Threshold = " ) ;
+    buff.push_back( Convert( threshold ) ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
+    csvFile.initData( headerData ) ;
+    csvFile.write( logFileName ) ;
     csvFile.initData( data ) ;
-    /*csvFile.setfield( 0 , 0 , "Fiber File Input: " ) ;
-    csvFile.setfield( 0 , 1 , fileName.input ) ;
-    csvFile.setfield( 1 , 0 , "Mask Input: " ) ;
-    //csvFile.setfield( 1 , 1 , fileName.mask ) ;
-    /*csvFile.setfield( 2 , 0 , "Fiber File with improper fibers removed: " ) ;
-    csvFile.setfield( 2 , 1 , "fileName.cleaned " ) ;
-    csvFile.setfield( 3 , 0 , "Fiber File Output (contains all the data): " ) ;
-    csvFile.setfield( 3 , 1 , fileName.output ) ;
-    csvFile.setfield( 4 , 0 , "Fiber File visualizable: " ) ;
-    csvFile.setfield( 4 , 1 , fileName.visu ) ;
-    csvFile.setfield( 5 , 0 , "Number of fibers before processing: " ) ;
-    //csvFile.setfield( 5 , 1 , Convert( vecPointData.size() ) ) ;
-    csvFile.setfield( 6 , 0 , "Threshold = " ) ;
-    //csvFile.setfield( 6 , 1 , Convert( threshold ) ) ;
-    for( int i = 0 ; i < data.size() ; i++ )
-    {
-        for( int j = 0 ; j < data[i].size() ; j++ )
-        {
-            //mycsv.setfield( )
-        }
-    }*/
-
+    csvFile.write( logFileName ) ;
 }
 
 void processing::FindAllData( vtkSmartPointer< vtkPolyData > polyData )
@@ -228,7 +215,6 @@ std::vector<std::vector< float > > processing::ApplyMaskToFiber(vtkSmartPointer<
         vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
         for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )
         {
-
             double* coordinates = fiberPoints->GetPoint( j ) ;
             /* Flip the coordinates */
             coordinates[0] = - coordinates[0] ;
