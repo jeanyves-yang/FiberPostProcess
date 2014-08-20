@@ -11,8 +11,6 @@
 #include <vtkCellArray.h>
 #include <iostream>
 #include <cstring>
-#include <string>
-#include <string.h>
 #include "processing.h"
 
 #include <itkImage.h>
@@ -36,6 +34,7 @@
 #include <sstream>
 
 #include "csv.h"
+#include "utils.h"
 
 
 processing::processing( int visuAttribute )
@@ -43,45 +42,10 @@ processing::processing( int visuAttribute )
     visualize = visuAttribute ;
 }
 
-std::string ExtensionOfFile( std::string fileName )
-{
-    std::string extension ;
-    extension = fileName.substr( fileName.find_last_of( "." ) + 1 ,
-                                 fileName.size() - fileName.find_last_of( "." ) + 1 ) ;
-    return extension ;
-}
-
-std::string ChangeEndOfFileName (std::string fileName, std::string change )
-{
-    std::string extension = ExtensionOfFile( fileName ) ;
-    fileName.replace( fileName.end() - extension.length() - 1 , fileName.end() , change ) ;
-    return fileName;
-}
-
 void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector< std::vector< float> > vecPointData , float threshold ,
-                               vtkSmartPointer< vtkPolyData > cleanedFiberFile )
+                               vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector< float > cumul ,
+                               std::vector< std::string > fiberStatus )
 {
-    /*ofstream logFile ;
-    logFile.open( "log.csv") ;
-    logfile << "Fiber File Input: " << fileName.input << std::endl ;
-    logfile << "Mask Input: " << fileName.mask << std::endl ;
-    logfile << "Fiber File with improper fibers removed: "  << fileName.cleaned << std::endl ;
-    logfile << "Fiber File Output (contains all the data): "  << fileName.output << std::endl ;
-    logfile << "Fiber File visualizable: " << fileName.visu << std::endl ;
-    logfile << "Number of fibers before processing: " << vecPointData.size() << std::endl ;
-    logfile << "Threshold = " << threshold << std::endl ;
-    logfile << "Number of fibers after processing: " << cleanedFiberFile->GetNumberOfLines() << std::endl ;
-    logfile << std::endl << std::endl << "DETAILS" << std::endl ;
-    for( int i = 0 ; i < vecPointData.size() ; i++ )
-    {
-        logfile <<
-        for( int j = 0 ; j < vecPointData[i].size() ; j++ )
-        {
-            pointData->SetNumberOfComponents( 1 ) ;
-            pointData->SetName( "InsideMask" ) ;
-            pointData->InsertNextValue( vecPointData[ i ][ j ] ) ;
-        }
-    }*/
     std::vector< std::vector < std::string > > data = ConvertArray( vecPointData ) ;
     csv csvFile ;
     std::vector< std::vector < std::string > > headerData ;
@@ -111,13 +75,39 @@ void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector
     buff.push_back( Convert( vecPointData.size() ) ) ;
     headerData.push_back( buff ) ;
     buff.clear() ;
+    buff.push_back( "Number of fibers after processing: " ) ;
+    buff.push_back( Convert( cleanedFiberFile->GetNumberOfCells() ) ) ;
+    headerData.push_back( buff ) ;
+    buff.clear() ;
     buff.push_back( "Threshold = " ) ;
     buff.push_back( Convert( threshold ) ) ;
     headerData.push_back( buff ) ;
     buff.clear() ;
-    csvFile.initData( headerData ) ;
-    csvFile.write( logFileName ) ;
+    for( int i = 0 ; i < vecPointData.size() ; i++ )
+    {
+        data[ i ].insert(data[ i ].begin() , Convert( cumul[ i ] ) ) ;
+    }
+    for( int i = 0 ; i < vecPointData.size() ; i++ )
+    {
+        data[ i ].insert(data[ i ].begin() , fiberStatus[ i ] ) ;
+    }
+    csvFile.initHeader( headerData ) ;
     csvFile.initData( data ) ;
+    std::vector< std::string > rowsId , colsId ;
+    for( int i = 0 ; i < vecPointData.size() ; i++ )
+    {
+        rowsId.push_back( "FIBER " + Convert( i ) ) ;
+    }
+    int max = FindMaxNbofCols( data ) ;
+    colsId.push_back( "" ) ;
+    colsId.push_back( "STATUS( 1 = rejected 0 = passed )" ) ;
+    colsId.push_back( "CUMUL VALUE" ) ;
+    for( int i = 0 ; i < max ; i++ )
+    {
+        colsId.push_back( "POINT " + Convert( i ) ) ;
+    }
+    csvFile.initRowsId( rowsId ) ;
+    csvFile.initColsId( colsId ) ;
     csvFile.write( logFileName ) ;
 }
 
@@ -169,20 +159,20 @@ vtkSmartPointer< vtkPolyData > processing::ReadFiberFile( T reader , std::string
     return PolyData ;
 }
 
-void processing::WriteFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName )
+void processing::WriteFiberFile( vtkSmartPointer< vtkPolyData > polyData , std::string outputFileName )
 {
     std::string extension = ExtensionOfFile( outputFileName ) ;
     if( extension.rfind( "vtk" ) != std::string::npos )
     {
         vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
-        writer->SetInputData( PolyData ) ;
+        writer->SetInputData( polyData ) ;
         writer->SetFileName( outputFileName.c_str() ) ;
         writer->Update() ;
     }
     else if( extension.rfind("vtp") != std::string::npos )
     {
         vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer< vtkXMLPolyDataWriter >::New() ;
-        writer->SetInputData( PolyData ) ;
+        writer->SetInputData( polyData ) ;
         writer->SetDataModeToBinary() ;
         writer->SetFileName( outputFileName.c_str() ) ;
         writer->Update() ;
@@ -276,18 +266,18 @@ std::vector< float > processing::CumulValuePerFiber( std::vector< std::vector< f
         {
             tmp = tmp + pointData[ i ][ j ] ;
         }
-        cumul.push_back( tmp ) ;
+        cumul.push_back( tmp/pointData[ i ].size() ) ;
     }
     return cumul ;
 }
 
-vtkSmartPointer< vtkPolyData > processing::AddPointData( vtkSmartPointer< vtkPolyData > PolyData )
+vtkSmartPointer< vtkPolyData > processing::AddPointData( vtkSmartPointer< vtkPolyData > polyData )
 {
-    const int nfib = PolyData->GetNumberOfCells() ;
+    const int nfib = polyData->GetNumberOfCells() ;
     vtkSmartPointer< vtkDoubleArray > pointData = vtkSmartPointer< vtkDoubleArray >::New() ;
     for( int i = 0 ; i < nfib ; ++i )
     {
-        vtkSmartPointer< vtkCell > fiber = PolyData->GetCell( i ) ;
+        vtkSmartPointer< vtkCell > fiber = polyData->GetCell( i ) ;
         vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
         for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )
         {
@@ -297,45 +287,68 @@ vtkSmartPointer< vtkPolyData > processing::AddPointData( vtkSmartPointer< vtkPol
         }
 
     }
-    PolyData->GetPointData()->AddArray( pointData ) ;
-    return PolyData;
+    polyData->GetPointData()->AddArray( pointData ) ;
+    return polyData;
 }
 
-vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyData > PolyData , float threshold )
+vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyData > polyData , float threshold )
 {
-    vtkSmartPointer< vtkPolyData > NewPolyData = vtkSmartPointer< vtkPolyData >::New() ;
-    //vtkSmartPointer<vtkFloatArray> NewTensors=vtkSmartPointer<vtkFloatArray>::New();
-    vtkSmartPointer<vtkPoints> NewPoints = vtkSmartPointer<vtkPoints>::New() ;
-    vtkSmartPointer<vtkCellArray> NewLines = vtkSmartPointer<vtkCellArray>::New() ;
-    vtkPoints* Points = PolyData->GetPoints() ;
-    vtkCellArray* Lines = PolyData->GetLines() ;
-    vtkIdType* Ids ;
-    vtkIdType NumberOfPoints ;
-    int NewId = 0 ;
+    vtkSmartPointer< vtkPolyData > newPolyData = vtkSmartPointer< vtkPolyData >::New() ;
+    vtkSmartPointer<vtkPoints> newPoints = vtkSmartPointer<vtkPoints>::New() ;
+    vtkSmartPointer<vtkCellArray> newLines = vtkSmartPointer<vtkCellArray>::New() ;
+    vtkPoints* points = polyData->GetPoints() ;
+    vtkCellArray* lines = polyData->GetLines() ;
+    vtkIdType* ids ;
+    vtkIdType numberOfPoints ;
+    int newId = 0 ;
     vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
-    fiberReadArray = vtkDoubleArray::SafeDownCast( PolyData->GetCellData()->GetArray("CumulativeValue") ) ;
-    Lines->InitTraversal() ;
-    for( int i = 0 ; Lines->GetNextCell( NumberOfPoints , Ids ) ; i++ )
+    fiberReadArray = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "CumulativeValue" ) ) ;
+    lines->InitTraversal() ;
+    for( int i = 0 ; lines->GetNextCell( numberOfPoints , ids ) ; i++ )
     {
-        vtkSmartPointer< vtkPolyLine > NewLine = vtkSmartPointer< vtkPolyLine >::New() ;
-        NewLine->GetPointIds()->SetNumberOfIds( NumberOfPoints ) ;
+        vtkSmartPointer< vtkPolyLine > newLine = vtkSmartPointer< vtkPolyLine >::New() ;
+        newLine->GetPointIds()->SetNumberOfIds( numberOfPoints ) ;
         if( fiberReadArray->GetValue( i ) <= threshold )
         {
-            for( int j = 0 ; j < NumberOfPoints ; j ++ )
+            for( int j = 0 ; j < numberOfPoints ; j ++ )
             {
-                NewPoints->InsertNextPoint( Points->GetPoint( Ids[j] ) ) ;
-                NewLine->GetPointIds()->SetId( j , NewId ) ;
-                NewId++ ;
+                newPoints->InsertNextPoint( points->GetPoint( ids[j] ) ) ;
+                newLine->GetPointIds()->SetId( j , newId ) ;
+                newId++ ;
             }
-            NewLines->InsertNextCell( NewLine ) ;
+            newLines->InsertNextCell( newLine ) ;
         }
         else
         {
         }
     }
-    NewPolyData->SetPoints( NewPoints ) ;
-    NewPolyData->SetLines( NewLines ) ;
-    return NewPolyData ;
+    newPolyData->SetPoints( newPoints ) ;
+    newPolyData->SetLines( newLines ) ;
+    return newPolyData ;
+}
+
+std::vector< std::string > processing::ThresholdPolyData( vtkSmartPointer< vtkPolyData > polyData , float threshold )
+{
+    std::vector< std::string > fiberStatus ;
+    vtkCellArray* lines = polyData->GetLines() ;
+    vtkIdType numberOfPoints ;
+    vtkIdType* ids ;
+    vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
+    fiberReadArray = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "CumulativeValue" ) ) ;
+    lines->InitTraversal() ;
+    for( int i = 0 ; lines->GetNextCell( numberOfPoints , ids ) ; i++ )
+    {
+
+        if( fiberReadArray->GetValue( i ) <= threshold )
+        {
+            fiberStatus.push_back( "0" ) ;
+        }
+        else
+        {
+            fiberStatus.push_back( "1" ) ;
+        }
+    }
+    return fiberStatus ;
 }
 
 vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber( vtkSmartPointer< vtkPolyData > PolyData )
@@ -432,9 +445,10 @@ int processing::processing_main(std::string& inputFileName ,
         std::cout << "File could not be read" << std::endl ;
         return 1 ;
     }
+    std::vector< std::string > fiberStatus = ThresholdPolyData( fiberPolyData , threshold ) ;
     WriteFiberFile( visuFiber , fileName.visu ) ;
     WriteFiberFile( fiberPolyData , fileName.output ) ;
     WriteFiberFile( cleanedFiberPolyData , fileName.cleaned ) ;
-    WriteLogFile( fileName , vecPointData , threshold , cleanedFiberPolyData ) ;
+    WriteLogFile( fileName , vecPointData , threshold , cleanedFiberPolyData , cumul , fiberStatus ) ;
     return 0 ;
 }

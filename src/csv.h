@@ -5,54 +5,32 @@
 #include <fstream>
 #include <string>
 #include <vector>
-
-template< class T >
-std::string Convert ( T number )
-{
-    std::ostringstream buff ;
-    buff << number ;
-    return buff.str() ;
-}
-
-std::vector< std::vector < std::string  > > ConvertArray( std::vector< std::vector< float > > array )
-{
-    std::vector< std::vector < std::string  > > buffer ;
-    for( int i = 0 ; i < array.size() ; i++ )
-    {
-        std::vector< std::string > buff ;
-        for( int j = 0 ; j < array[i].size() ; j++ )
-        {
-            buff.push_back( Convert( array[ i ][ j ] ) ) ;
-        }
-        buffer.push_back( buff ) ;
-    }
-    return buffer ;
-}
+#include "utils.h"
 
 class csv
 {
-    friend bool operator==( const csv &, const csv & ) ;
-    friend bool operator!=( const csv &, const csv & ) ;
-
 public:
     csv() ;
     csv( char* ) ;
     void read(char * ) ;
     void write(char * ) ;
     void initData( std::vector< std::vector< std::string > > vecData ) ;
-    std::string getfield( int , int ) ;
-    int FindMaxNbofCols( std::vector< std::vector< std::string > > vecData ) ;
-    void setfield( int , int , std::string ) ;
-    const csv &operator=( const csv & ) ;
-    int rows , cols ;
-
+    void initHeader( std::vector< std::vector< std::string > > headerData ) ;
+    void initRowsId( std::vector< std::string > rowsTitle ) ;
+    void initColsId( std::vector< std::string > colsTitle ) ;
 private:
-    std::vector< std::vector< std::string > > data ;
+    std::vector< std::vector< std::string > > header , data ;
+    std::string delimiter ;
+    std::vector< std::string > rowsId , colsId ;
 };
 
 csv::csv()
 {
-    rows = cols = 0 ;
+    delimiter = "," ;
+    header= std::vector< std::vector< std::string > >() ;
+    data = std::vector< std::vector< std::string > >() ;
+    rowsId = std::vector< std::string >() ;
+    colsId = std::vector< std::string >() ;
 }
 
 csv::csv( char* fname )
@@ -60,56 +38,57 @@ csv::csv( char* fname )
     read( fname ) ;
 }
 
-const csv &csv::operator=( const csv &n )
-{
-    rows = n.rows ;
-    cols = n.cols ;
-    data = n.data ;
-    return *this ;
-}
-
-int csv::FindMaxNbofCols( std::vector< std::vector< std::string > > vecData )
-{
-    int max = 0 ;
-    for( int i = 0 ; i < vecData.size() ; i++ )
-    {
-        if( vecData[ i ].size() > max )
-        {
-            max = vecData[ i ].size() ;
-        }
-    }
-    return max ;
-}
-
 void csv::initData( std::vector< std::vector< std::string > > vecData )
 {
     data.clear() ;
-    rows = vecData.size() ;
-    cols = FindMaxNbofCols( vecData ) ;
     for( int i = 0 ; i < vecData.size() ; i++ )
     {
         std::vector< std::string > buff ;
-        for( int j = 0 ; j < cols ; j++ )
+        for( int j = 0 ; j < vecData[ i ].size() ; j++ )
         {
-            if( j < vecData[ i ].size() )
-            {
-                buff.push_back( Convert( vecData[ i ][ j ] ) ) ;
-            }
-            else
-            {
-                buff.push_back( "0" ) ;
-            }
+            buff.push_back( Convert( vecData[ i ][ j ] ) ) ;
         }
         data.push_back( buff ) ;
     }
 }
 
+void csv::initHeader( std::vector< std::vector< std::string > > headerData )
+{
+    header.clear() ;
+    for( int i = 0 ; i < headerData.size() ; i++ )
+    {
+        std::vector< std::string > buff ;
+        for( int j = 0 ; j < headerData[ i ].size() ; j++ )
+        {
+            buff.push_back( Convert( headerData[ i ][ j ] ) ) ;
+        }
+        header.push_back( buff ) ;
+    }
+}
+
+void csv::initRowsId( std::vector< std::string > rowsTitle )
+{
+    rowsId.clear() ;
+    for( int i = 0 ; i < rowsTitle.size() ; i++ )
+    {
+        rowsId.push_back( rowsTitle[ i ] ) ;
+    }
+}
+
+void csv::initColsId( std::vector< std::string > colsTitle )
+{
+    colsId.clear() ;
+    for( int i = 0 ; i < colsTitle.size() ; i++ )
+    {
+        colsId.push_back( colsTitle[ i ] ) ;
+    }
+}
+
 void csv::read( char* fname )
 {
-    ifstream in( fname ) ;
+    /*ifstream in( fname ) ;
     std::string element , delimiters = ",\n\r" ;
     char ch;
-    rows = cols = 0 ;
     data.clear() ;
     data.push_back( std::vector < std::string >() ) ;
     while( in.read( (char*)&ch , 1 ) )
@@ -135,45 +114,62 @@ void csv::read( char* fname )
     in.close();
     data[ rows ].push_back( element ) ;
     cols = data[ 0 ].size() ;
-    rows = data.size() ;
+    rows = data.size() ;*/
 }
 
 void csv::write( char* fname )
 {
     std::ofstream out ;
-    out.open( fname , std::ofstream::out |std::ofstream::app ) ;
-    for( int x = 0 ; x < rows ; x++ )
+    out.open( fname , std::ofstream::out |std::ofstream::trunc ) ;
+    if( header.empty() )
     {
-        for( int y = 0 ; y < cols ; y++ )
+    }
+    else
+    {
+        for( int i = 0 ; i < header.size() ; i++ )
         {
-            out << data[ x ][ y ] ;
-            if( y != cols - 1 )
+            for( int j = 0 ; j < header[ i ].size() ; j++ )
             {
-                out << "," ;
+                out << header[ i ][ j ] ;
+                if( j!= header[ i ].size() - 1 )
+                {
+                    out << delimiter ;
+                }
+            }
+            out << std::endl ;
+        }
+        out.close() ;
+        out.open( fname , std::ofstream::out |std::ofstream::app ) ;
+    }
+    if( !colsId.empty() )
+    {
+        for( int k = 0 ; k < colsId.size() ; k++ )
+        {
+            out << colsId[ k ] ;
+            if( k!= colsId.size() - 1 )
+            {
+                out << delimiter ;
             }
         }
-        out << endl ;
+        out << std::endl ;
+    }
+    for( int i = 0 ; i < data.size() ; i++ )
+    {
+        if( !rowsId.empty() )
+        {
+            out << rowsId[ i ] ;
+            out << delimiter ;
+        }
+        for( int j = 0 ; j < data[ i ].size() ; j++ )
+        {
+            out << data[ i ][ j ] ;
+            if( j!= data[ i ].size() - 1 )
+            {
+                out << delimiter ;
+            }
+        }
+        out << std::endl ;
     }
     out.close() ;
-}
-
-std::string csv::getfield( int x , int y )
-{
-    return data[ x ][ y ] ;
-}
-
-void csv::setfield( int x , int y , std::string val )
-{
-    data[ x ][ y ] = val ;
-}
-
-bool operator==( const csv &d1 , const csv &d2 )
-{
-    return d1 == d2 ;
-}
-
-bool operator!=( const csv &d1 , const csv &d2 )
-{
-    return d1 != d2 ;
 }
 #endif
