@@ -19,10 +19,13 @@ include(${VTK_USE_FILE})
 set(CXX_FILES
 FiberPostProcess.cxx
 processing.cxx
+utils.cxx
 )
 
 set(H_FILES
 processing.h
+utils.h
+csv.h
 )
 
 SEMMacroBuildCLI(

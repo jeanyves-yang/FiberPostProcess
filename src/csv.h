@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include "utils.h"
+#include <iostream>
+#include <fstream>
 
 class csv
 {
@@ -86,35 +88,47 @@ void csv::initColsId( std::vector< std::string > colsTitle )
 
 void csv::read( char* fname )
 {
-    /*ifstream in( fname ) ;
-    std::string element , delimiters = ",\n\r" ;
-    char ch;
+    std::ifstream in ;
+    in.open( fname , std::ifstream::in ) ;
+    std::string s = "" ;
+    std::string element = "\n" ;
     data.clear() ;
-    data.push_back( std::vector < std::string >() ) ;
-    while( in.read( (char*)&ch , 1 ) )
+    int count= 0 ;
+    char c ;
+    std::string line ;
+    std::vector< std::string > dataLine ;
+    while( std::getline( in , line ) )
     {
-        if( delimiters.find_first_of( ch ) == delimiters.npos )
+        std::stringstream lineStream( line ) ;
+        std::string cell ;
+        while( std::getline(lineStream , cell , delimiter[0]) )
         {
-            element += ch ;
+            dataLine.push_back( cell ) ;
+        }
+        data.push_back( dataLine ) ;
+        dataLine.clear() ;
+    }
+
+    /*while( in.good() )
+    {
+        c = in.get() ;
+        if( s == element )
+        if( c == delimiter[0] )
+        {
+            break ;
         }
         else
         {
-            if( ch != '\r' )
-            {
-                data[rows].push_back( element ) ;
-                element = "" ;
-                if( ch == '\n' )
-                {
-                    data.push_back( std::vector< std::string >() ) ;
-                    rows++ ;
-                }
-            }
+            std::string tmp( 1 , c ) ;
+            tmp[0] = c ;
+            s = s + tmp ;
+            //std::cout<< c <<" " << s <<std::endl ;
+            count ++ ;
+            std::cout << count << std::endl ;
         }
-    }
-    in.close();
-    data[ rows ].push_back( element ) ;
-    cols = data[ 0 ].size() ;
-    rows = data.size() ;*/
+    }*/
+    std::cout << s << std::endl ;
+    in.close() ;
 }
 
 void csv::write( char* fname )
