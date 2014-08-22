@@ -106,11 +106,11 @@ void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector
     {
         colsId.push_back( "POINT " + Convert( i ) ) ;
     }
-    //csvFile.initRowsId( rowsId ) ;
-    //csvFile.initColsId( colsId ) ;
-    //csvFile.write( logFileName ) ;
-    csvFile.read( "log.csv" ) ;
-    csvFile.write( "copy.csv" ) ;
+    csvFile.initRowsId( rowsId ) ;
+    csvFile.initColsId( colsId ) ;
+    csvFile.write( logFileName ) ;
+    //csvFile.read( "log.csv" ) ;
+    //csvFile.write( "copy.csv" ) ;
 }
 
 void processing::FindAllData( vtkSmartPointer< vtkPolyData > polyData )

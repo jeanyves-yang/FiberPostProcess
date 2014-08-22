@@ -52,3 +52,8 @@ add_test(NAME FiberPostProcessIdentity COMMAND $<TARGET_FILE:FiberProcessingTest
   -t 4
   -v 1
 )
+
+# CSV Tests
+
+add_executable(CSVTest csvTest.cxx)
+add_test(NAME CSV COMMAND $<TARGET_FILE:CSVTest>)

@@ -11,6 +11,8 @@
 
 class csv
 {
+    friend bool operator==( const csv &, const csv & );
+    friend bool operator!=( const csv &, const csv & );
 public:
     csv() ;
     csv( char* ) ;
@@ -185,5 +187,33 @@ void csv::write( char* fname )
         out << std::endl ;
     }
     out.close() ;
+}
+
+bool operator==( const csv &d1, const csv &d2 )
+{
+    if( d1.data.size() != d2.data.size() )
+    {
+        return false ;
+    }
+    for( int i = 0 ; i < d1.data.size() ; i++ )
+    {
+        if( d1.data[ i ].size() != d2.data[ i ].size() )
+        {
+            return false ;
+        }
+        for( int j = 0 ; j < d1.data[ i ].size() ; j++ )
+        {
+            if( d1.data[ i ][ j ] != d2.data[ i ][ j ] )
+            {
+                return false ;
+            }
+        }
+    }
+    return true ;
+}
+
+bool operator!=( const csv &d1, const csv &d2 )
+{
+    return !( d1 == d2 ) ;
 }
 #endif
