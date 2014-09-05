@@ -12,7 +12,7 @@ int main( int argc , char* argv[] )
     buff.push_back( logFileName ) ;
     data.push_back( buff ) ;
     buff.clear() ;
-    buff.push_back( "Mask Input: " ) ;
+    buff.push_back( "Mask Input:" ) ;
     data.push_back( buff ) ;
     buff.clear() ;
     csvTestInitData.initData( data ) ;

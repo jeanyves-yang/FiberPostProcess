@@ -199,7 +199,6 @@ bool operator==( const csv &d1, const csv &d2 )
         {
             if( d1Content[ i ][ j ] != d2Content[ i ][ j ] )
             {
-                //std::cout << i << j<<std::endl ;
                 std::cout << " d1.data[i][j].size() = " << d1Content[i][j].size() << " d2.data[i][j].size() = " << d2Content[i][j].size() << std::endl ;
                 return false ;
             }

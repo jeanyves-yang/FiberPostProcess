@@ -58,5 +58,5 @@ add_test(NAME FiberPostProcessIdentity COMMAND $<TARGET_FILE:FiberProcessingTest
 add_executable(CSVTestInitHeader csvTestInitHeader.cxx)
 add_test(NAME FiberPostProcessCSVInitHeader COMMAND $<TARGET_FILE:CSVTestInitHeader>)
 
-#add_executable(CSVTestInitData csvTestInitData.cxx)
-#add_test(NAME FiberPostProcessCSVInitData COMMAND $<TARGET_FILE:CSVTestInitData>)
+add_executable(CSVTestInitData csvTestInitData.cxx)
+add_test(NAME FiberPostProcessCSVInitData COMMAND $<TARGET_FILE:CSVTestInitData>)
