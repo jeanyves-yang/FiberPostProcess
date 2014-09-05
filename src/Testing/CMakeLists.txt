@@ -3,8 +3,8 @@
 set(TEMP_DIR ${FiberPostProcess_BINARY_DIR}/Testing/Temporary )
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Data )
 
-set(BaselineNormalRun ${SOURCE_DIR}/CingulumNormalRun-cleaned.vtk)
-set(BaselineEmptyMask ${SOURCE_DIR}/CingulumEmptyMask-cleaned.vtk)
+set(BaselineNormalRun ${SOURCE_DIR}/CingulumNormalRun.vtk)
+set(BaselineEmptyMask ${SOURCE_DIR}/CingulumEmptyMask.vtk)
 set(Input ${SOURCE_DIR}/Cingulum.vtk)
 set(Output ${TEMP_DIR}/output.vtk)
 set(OutputCleaned ${TEMP_DIR}/output-cleaned.vtk)
@@ -18,12 +18,12 @@ target_link_libraries(FiberProcessingTest FiberPostProcessLib)
 add_test(NAME FiberPostProcess COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
   ${BaselineNormalRun}
-  ${OutputCleaned}
+  ${Output}
   ModuleEntryPoint
   -i ${Input}
   -o ${Output}
   -m ${Mask}
-  -t 4
+  -t 0.25
   -v 1
 )
 
@@ -36,7 +36,7 @@ add_test(NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTes
   -i ${Input}
   -o ${Output}
   -m ${VoidMask}
-  -t 4
+  -t 0.25
   -v 1
 )
 
@@ -44,16 +44,19 @@ add_test(NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTes
 add_test(NAME FiberPostProcessIdentity COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
   ${Input}
-  ${OutputCleaned}
+  ${Output}
   ModuleEntryPoint
   -i ${Input}
   -o ${Output}
   -m ${IdentityMask}
-  -t 4
+  -t 0.25
   -v 1
 )
 
 # CSV Tests
 
-add_executable(CSVTest csvTest.cxx)
-add_test(NAME CSV COMMAND $<TARGET_FILE:CSVTest>)
+add_executable(CSVTestInitHeader csvTestInitHeader.cxx)
+add_test(NAME FiberPostProcessCSVInitHeader COMMAND $<TARGET_FILE:CSVTestInitHeader>)
+
+#add_executable(CSVTestInitData csvTestInitData.cxx)
+#add_test(NAME FiberPostProcessCSVInitData COMMAND $<TARGET_FILE:CSVTestInitData>)

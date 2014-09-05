@@ -197,12 +197,10 @@ std::vector<std::vector< float > > processing::ApplyMaskToFiber(vtkSmartPointer<
     interp->SetInputImage( maskImage ) ;
     itk::Point< double , 3 > p ;
     const int nfib = polyData->GetNumberOfCells() ;
-    std::cout<< nfib <<std::endl;
     std::vector< std::vector< float > > pointData ;
     for( int i = 0 ; i < nfib ; ++i )
     {
         std::vector < float > fib ;
-        std::cout << " FIBER NUMBER " << i << std::endl ;
         vtkSmartPointer< vtkCell > fiber = polyData->GetCell( i ) ;
         vtkSmartPointer< vtkPoints > fiberPoints = fiber->GetPoints() ;
         for( int j = 0 ; j < fiberPoints->GetNumberOfPoints() ; ++j )

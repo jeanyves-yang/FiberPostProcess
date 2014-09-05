@@ -90,6 +90,7 @@ void csv::initColsId( std::vector< std::string > colsTitle )
 
 void csv::read( char* fname )
 {
+
     std::ifstream in ;
     in.open( fname , std::ifstream::in ) ;
     std::string s = "" ;
@@ -110,26 +111,6 @@ void csv::read( char* fname )
         data.push_back( dataLine ) ;
         dataLine.clear() ;
     }
-
-    /*while( in.good() )
-    {
-        c = in.get() ;
-        if( s == element )
-        if( c == delimiter[0] )
-        {
-            break ;
-        }
-        else
-        {
-            std::string tmp( 1 , c ) ;
-            tmp[0] = c ;
-            s = s + tmp ;
-            //std::cout<< c <<" " << s <<std::endl ;
-            count ++ ;
-            std::cout << count << std::endl ;
-        }
-    }*/
-    std::cout << s << std::endl ;
     in.close() ;
 }
 
@@ -191,20 +172,35 @@ void csv::write( char* fname )
 
 bool operator==( const csv &d1, const csv &d2 )
 {
-    if( d1.data.size() != d2.data.size() )
+    std::vector< std::vector< std::string > > d1Content ;
+    d1Content = d1.header ;
+    std::vector< std::vector< std::string > > d2Content ;
+    d2Content = d2.header ;
+    for( int i = 0 ; i < d1.data.size() ; i++ )
+    {
+        d1Content.push_back( d1.data[i] ) ;
+    }
+    for( int i = 0 ; i < d2.data.size() ; i++ )
+    {
+        d2Content.push_back( d2.data[i] ) ;
+    }
+    if( d1Content.size() != d2Content.size() )
     {
         return false ;
     }
-    for( int i = 0 ; i < d1.data.size() ; i++ )
+    for( int i = 0 ; i < d1Content.size() ; i++ )
     {
-        if( d1.data[ i ].size() != d2.data[ i ].size() )
+        if( d1Content[ i ].size() != d2Content[ i ].size() )
         {
+            std::cout << " d1.data[ i ].size() = " << d1Content[i].size() << " d2.data[i].size() = " << d2Content[i].size() << std::endl ;
             return false ;
         }
-        for( int j = 0 ; j < d1.data[ i ].size() ; j++ )
+        for( int j = 0 ; j < d1Content[ i ].size() ; j++ )
         {
-            if( d1.data[ i ][ j ] != d2.data[ i ][ j ] )
+            if( d1Content[ i ][ j ] != d2Content[ i ][ j ] )
             {
+                //std::cout << i << j<<std::endl ;
+                std::cout << " d1.data[i][j].size() = " << d1Content[i][j].size() << " d2.data[i][j].size() = " << d2Content[i][j].size() << std::endl ;
                 return false ;
             }
         }
