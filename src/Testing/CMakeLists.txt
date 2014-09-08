@@ -60,3 +60,12 @@ add_test(NAME FiberPostProcessCSVInitHeader COMMAND $<TARGET_FILE:CSVTestInitHea
 
 add_executable(CSVTestInitData csvTestInitData.cxx)
 add_test(NAME FiberPostProcessCSVInitData COMMAND $<TARGET_FILE:CSVTestInitData>)
+
+add_executable(CSVTestInitRowsId csvTestInitRowsId.cxx)
+add_test(NAME FiberPostProcessCSVInitRowsId COMMAND $<TARGET_FILE:CSVTestInitRowsId>)
+
+add_executable(CSVTestInitColsId csvTestInitColsId.cxx)
+add_test(NAME FiberPostProcessCSVInitColsId COMMAND $<TARGET_FILE:CSVTestInitColsId>)
+
+add_executable(CSVTestInitFull csvTestInitFull.cxx)
+add_test(NAME FiberPostProcessCSVInitFull COMMAND $<TARGET_FILE:CSVTestInitFull>)

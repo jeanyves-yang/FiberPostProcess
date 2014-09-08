@@ -22,6 +22,8 @@ public:
     void initHeader( std::vector< std::vector< std::string > > headerData ) ;
     void initRowsId( std::vector< std::string > rowsTitle ) ;
     void initColsId( std::vector< std::string > colsTitle ) ;
+    std::vector< std::string > getRowsId() ;
+    std::vector< std::string > getColsId() ;
 private:
     std::vector< std::vector< std::string > > header , data ;
     std::string delimiter ;
@@ -42,6 +44,15 @@ csv::csv( char* fname )
     read( fname ) ;
 }
 
+std::vector< std::string > csv::getRowsId()
+{
+    return rowsId ;
+}
+
+std::vector< std::string > csv::getColsId()
+{
+    return colsId ;
+}
 void csv::initData( std::vector< std::vector< std::string > > vecData )
 {
     data.clear() ;
@@ -188,18 +199,18 @@ bool operator==( const csv &d1, const csv &d2 )
     {
         return false ;
     }
-    for( int i = 0 ; i < d1Content.size() ; i++ )
+    for( int i = 0 ; i < d2Content.size() ; i++ )
     {
         if( d1Content[ i ].size() != d2Content[ i ].size() )
         {
-            std::cout << " d1.data[ i ].size() = " << d1Content[i].size() << " d2.data[i].size() = " << d2Content[i].size() << std::endl ;
+            std::cout << " d1.data[" << i << "].size() = " << d1Content[ i ].size() << " d2.data[" << i << "].size() = " << d2Content[ i ].size() << std::endl ;
             return false ;
         }
-        for( int j = 0 ; j < d1Content[ i ].size() ; j++ )
+        for( int j = 0 ; j < d2Content[ i ].size() ; j++ )
         {
             if( d1Content[ i ][ j ] != d2Content[ i ][ j ] )
             {
-                std::cout << " d1.data[i][j].size() = " << d1Content[i][j].size() << " d2.data[i][j].size() = " << d2Content[i][j].size() << std::endl ;
+                std::cout << " d1.data[i][j].size() = " << d1Content[ i ][ j ].size() << " d2.data[i][j].size() = " << d2Content[ i ][ j ].size() << std::endl ;
                 return false ;
             }
         }
