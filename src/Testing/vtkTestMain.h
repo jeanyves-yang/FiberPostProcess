@@ -50,192 +50,220 @@
 #include "vtkPolyDataMapper.h"
 #include "vtkPoints.h"
 #include <vtkSmartPointer.h>
-
+#include <vtkCellData.h>
 #define ITK_TEST_DIMENSION_MAX 6
 
-typedef int ( *MainFuncPointer )(int, char *[]);
-std::map<std::string, MainFuncPointer> StringToTestFunctionMap;
+typedef int ( *MainFuncPointer )( int , char *[] ) ;
+std::map<std::string, MainFuncPointer> StringToTestFunctionMap ;
 
-#define REGISTER_TEST(test)       \
-  extern int test(int, char *[]); \
-  StringToTestFunctionMap[#test] = test
+#define REGISTER_TEST( test )       \
+    extern int test( int , char *[] ) ; \
+    StringToTestFunctionMap[ #test ] = test
 
-int RegressionTestPolyData(const char *testImageFilename,
+int RegressionTestPolyData( const char *testImageFilename ,
                            const char *baselineImageFilename
-                          );
+                           ) ;
 
-std::map<std::string, int> RegressionTestBaselines(char *);
+std::map<std::string, int> RegressionTestBaselines( char * ) ;
 
-void RegisterTests();
+void RegisterTests() ;
 
 void PrintAvailableTests()
 {
-  std::cout << "Available tests:\n";
-  std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.begin();
-  int                                              i = 0;
-  while( j != StringToTestFunctionMap.end() )
+    std::cout << "Available tests:\n" ;
+    std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.begin() ;
+    int                                              i = 0 ;
+    while( j != StringToTestFunctionMap.end() )
     {
-    std::cout << i << ". " << j->first << "\n";
-    ++i;
-    ++j;
+        std::cout << i << ". " << j->first << "\n" ;
+        ++i ;
+        ++j ;
     }
 }
 
-int main(int ac, char *av[])
+int main( int ac , char *av[] )
 {
-  typedef std::pair<char *, char *> ComparePairType;
-  std::vector<ComparePairType> compareList;
-
-  RegisterTests();
-  std::string testToRun;
-  if( ac < 2 )
+    typedef std::pair< char * , char * > ComparePairType ;
+    std::vector< ComparePairType > compareList ;
+    RegisterTests() ;
+    std::string testToRun ;
+    if( ac < 2 )
     {
-    PrintAvailableTests();
-    std::cout << "To run a test, enter the test number: ";
-    int testNum = 0;
-    std::cin >> testNum;
-    std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.begin();
-    int                                              i = 0;
-    while( j != StringToTestFunctionMap.end() && i < testNum )
-      {
-      ++i;
-      ++j;
-      }
-
-    if( j == StringToTestFunctionMap.end() )
-      {
-      std::cerr << testNum << " is an invalid test number\n";
-      return -1;
-      }
-    testToRun = j->first;
-    }
-  else
-    {
-    while( ac > 0 && testToRun.empty() )
-      {
-      if( ac > 3 && strcmp(av[1], "--compare") == 0 )
+        PrintAvailableTests() ;
+        std::cout << "To run a test, enter the test number: " ;
+        int testNum = 0 ;
+        std::cin >> testNum ;
+        std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.begin() ;
+        int                                              i = 0 ;
+        while( j != StringToTestFunctionMap.end() && i < testNum )
         {
-        compareList.push_back( ComparePairType(av[2], av[3]) );
-        av += 3;
-        ac -= 3;
+            ++i ;
+            ++j ;
         }
-      else
+
+        if( j == StringToTestFunctionMap.end() )
         {
-        testToRun = av[1];
+            std::cerr << testNum << " is an invalid test number\n" ;
+            return -1 ;
         }
-      }
+        testToRun = j->first ;
     }
-  std::map<std::string, MainFuncPointer>::iterator j = StringToTestFunctionMap.find(testToRun);
-  if( j != StringToTestFunctionMap.end() )
+    else
     {
-    MainFuncPointer f = j->second;
-    int             result;
-    try
-      {
-      // Invoke the test's "main" function.
-      result = ( *f )( ac - 1, av + 1 );
-      // Make a list of possible baselines
-      for( int i = 0; i < static_cast<int>( compareList.size() ); i++ )
+        while( ac > 0 && testToRun.empty() )
         {
-        char *                               baselineFilename = compareList[i].first;
-        char *                               testFilename = compareList[i].second;
-        std::map<std::string, int>           baselines = RegressionTestBaselines(baselineFilename);
-        std::map<std::string, int>::iterator baseline = baselines.begin();
-        std::string                          bestBaseline;
-        int                                  bestBaselineStatus = std::numeric_limits<int>::max();
-        while( baseline != baselines.end() )
-          {
-          baseline->second = RegressionTestPolyData(testFilename,
-                                                    ( baseline->first ).c_str()
-                                                   );
-          if( baseline->second < bestBaselineStatus )
+            if( ac > 3 && strcmp(av[1], "--compare") == 0 )
             {
-            bestBaseline = baseline->first;
-            bestBaselineStatus = baseline->second;
+                compareList.push_back( ComparePairType( av[ 2 ] , av[ 3 ] ) ) ;
+                av += 3 ;
+                ac -= 3 ;
             }
-          if( baseline->second == 0 )
+            else
             {
-            break;
+                testToRun = av[ 1 ] ;
             }
-          ++baseline;
-          }
-
-        // if the best we can do still has errors, generate the error images
-        if( bestBaselineStatus )
-          {
-          std::cout<<"None of the baseline correspond to the output"<<std::endl;
-          }
-
-        // output the matching baseline
-        std::cout << "<DartMeasurement name=\"BaselineImageName\" type=\"text/string\">";
-        std::cout << itksys::SystemTools::GetFilenameName(bestBaseline);
-        std::cout << "</DartMeasurement>" << std::endl;
-        result += bestBaselineStatus;
         }
-      }
-    catch( ... )
-      {
-      std::cerr << "VTK test driver caught an unknown exception!!!\n";
-      result = -1;
-      }
-    return result;
     }
-  PrintAvailableTests();
-  std::cerr << "Failed: " << testToRun << ": No test registered with name " << testToRun << "\n";
-  return -1;
+    std::map< std::string , MainFuncPointer >::iterator j = StringToTestFunctionMap.find( testToRun ) ;
+    if( j != StringToTestFunctionMap.end() )
+    {
+        MainFuncPointer f = j->second ;
+        int             result ;
+        try
+        {
+            // Invoke the test's "main" function.
+            result = ( *f )( ac - 1, av + 1 ) ;
+            // Make a list of possible baselines
+            for( int i = 0 ; i < static_cast< int >( compareList.size() ) ; i++ )
+            {
+                char *                               baselineFilename = compareList[ i ].first ;
+                char *                               testFilename = compareList[ i ].second ;
+                std::map<std::string, int>           baselines = RegressionTestBaselines( baselineFilename ) ;
+                std::map<std::string, int>::iterator baseline = baselines.begin() ;
+                std::string                          bestBaseline ;
+                int                                  bestBaselineStatus = std::numeric_limits< int >::max() ;
+                while( baseline != baselines.end() )
+                {
+                    baseline->second = RegressionTestPolyData( testFilename ,
+                                                              ( baseline->first ).c_str()
+                                                              );
+                    if( baseline->second < bestBaselineStatus )
+                    {
+                        bestBaseline = baseline->first ;
+                        bestBaselineStatus = baseline->second ;
+                    }
+                    if( baseline->second == 0 )
+                    {
+                        break ;
+                    }
+                    ++baseline ;
+                }
+
+                // if the best we can do still has errors, generate the error images
+                if( bestBaselineStatus )
+                {
+                    std::cout << "None of the baseline correspond to the output" << std::endl ;
+                }
+
+                // output the matching baseline
+                std::cout << "<DartMeasurement name=\"BaselineImageName\" type=\"text/string\">" ;
+                std::cout << itksys::SystemTools::GetFilenameName( bestBaseline ) ;
+                std::cout << "</DartMeasurement>" << std::endl ;
+                result += bestBaselineStatus ;
+            }
+        }
+        catch( ... )
+        {
+            std::cerr << "VTK test driver caught an unknown exception!!!\n" ;
+            result = -1 ;
+        }
+        return result ;
+    }
+    PrintAvailableTests() ;
+    std::cerr << "Failed: " << testToRun << ": No test registered with name " << testToRun << "\n" ;
+    return -1 ;
 }
 
 // Regression Testing Code
 
-int RegressionTestPolyData(const char *testImageFilename,
-                        const char *baselineImageFilename
-                       )
+int RegressionTestPolyData( const char *testImageFilename ,
+                           const char *baselineImageFilename
+                           )
 {
-  vtkSmartPointer<vtkPolyDataReader> polyReader1 =
-    vtkSmartPointer<vtkPolyDataReader>::New() ;
-  polyReader1->SetFileName( testImageFilename ) ;
-  polyReader1->Update() ;
-  vtkSmartPointer<vtkPolyData> vtkpolydata1 =
-    vtkSmartPointer<vtkPolyData>::New() ;
-  vtkpolydata1= polyReader1->GetOutput() ;
-  vtkSmartPointer<vtkPolyDataReader> polyReader2 =
-    vtkSmartPointer<vtkPolyDataReader>::New() ;
-  polyReader2->SetFileName( baselineImageFilename ) ;
-  polyReader2->Update() ;
-  vtkSmartPointer<vtkPolyData> vtkpolydata2 =
-     vtkSmartPointer<vtkPolyData>::New() ;
-  vtkpolydata2= polyReader2->GetOutput() ;
+    vtkSmartPointer<vtkPolyDataReader> polyReader1 =
+            vtkSmartPointer<vtkPolyDataReader>::New() ;
+    polyReader1->SetFileName( testImageFilename ) ;
+    polyReader1->Update() ;
+    vtkSmartPointer<vtkPolyData> vtkpolydata1 =
+            vtkSmartPointer<vtkPolyData>::New() ;
+    vtkpolydata1= polyReader1->GetOutput() ;
+    vtkSmartPointer<vtkPolyDataReader> polyReader2 =
+            vtkSmartPointer<vtkPolyDataReader>::New() ;
+    polyReader2->SetFileName( baselineImageFilename ) ;
+    polyReader2->Update() ;
+    vtkSmartPointer<vtkPolyData> vtkpolydata2 =
+            vtkSmartPointer<vtkPolyData>::New() ;
+    vtkpolydata2= polyReader2->GetOutput() ;
 
-  if (vtkpolydata2->GetNumberOfCells() != vtkpolydata1->GetNumberOfCells())
-  {
-    return 1 ;
-  }
-  if (vtkpolydata2->GetNumberOfStrips() != vtkpolydata1->GetNumberOfStrips())
-  {
-    return 2 ;
-  }
-  if (vtkpolydata2->GetNumberOfPolys() != vtkpolydata1->GetNumberOfPolys())
-  {
-    return 3 ;
-  }
-  if (vtkpolydata2->GetNumberOfLines() != vtkpolydata1->GetNumberOfLines())
-  {
-    return 4 ;
-  }
-  if (vtkpolydata2->GetNumberOfVerts() != vtkpolydata1->GetNumberOfVerts())
-  {
-    return 5 ;
-  }
-  if (vtkpolydata2->GetNumberOfPieces() != vtkpolydata1->GetNumberOfPieces())
-  {
-    return 6 ;
-  }
-  if (vtkpolydata2->GetMaxCellSize() != vtkpolydata1->GetMaxCellSize())
-  {
-    return 7 ;
-  }
-
-  return 0;
+    if( vtkpolydata2->GetNumberOfCells() != vtkpolydata1->GetNumberOfCells() )
+    {
+        return 1 ;
+    }
+    if( vtkpolydata2->GetNumberOfStrips() != vtkpolydata1->GetNumberOfStrips() )
+    {
+        return 2 ;
+    }
+    if( vtkpolydata2->GetNumberOfPolys() != vtkpolydata1->GetNumberOfPolys() )
+    {
+        return 3 ;
+    }
+    if( vtkpolydata2->GetNumberOfLines() != vtkpolydata1->GetNumberOfLines() )
+    {
+        return 4 ;
+    }
+    if( vtkpolydata2->GetNumberOfVerts() != vtkpolydata1->GetNumberOfVerts() )
+    {
+        return 5 ;
+    }
+    if( vtkpolydata2->GetNumberOfPieces() != vtkpolydata1->GetNumberOfPieces() )
+    {
+        return 6 ;
+    }
+    if( vtkpolydata2->GetMaxCellSize() != vtkpolydata1->GetMaxCellSize() )
+    {
+        return 7 ;
+    }
+    if( vtkpolydata2->GetCellData()->GetNumberOfArrays() != vtkpolydata1->GetCellData()->GetNumberOfArrays() )
+    {
+        std::cout << "8" << std::endl ;
+        return 8;
+    }
+    for( int i = 0 ; i < vtkpolydata2->GetCellData()->GetNumberOfArrays() ; i++ )
+    {
+        if( vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfTuples() != vtkpolydata1->GetCellData()->GetArray( i )->GetNumberOfTuples() )
+        {
+            std::cout << "9" << std::endl ;
+            return 9 ;
+        }
+        for( int j = 0 ; j < vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfTuples() ; j++ )
+        {
+            if( vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfComponents() != vtkpolydata1->GetCellData()->GetArray( i )->GetNumberOfComponents() )
+            {
+                std::cout << "10"<<std::endl ;
+                return 10 ;
+            }
+            for( int k = 0 ; k < vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfComponents() ; k++ )
+            {
+                if( vtkpolydata2->GetCellData()->GetArray( i )->GetComponent( j , k ) != vtkpolydata1->GetCellData()->GetArray( i )->GetComponent( j , k ) )
+                {
+                    std::cout << vtkpolydata2->GetCellData()->GetArray( i )->GetComponent( j , k ) << std::endl<<vtkpolydata1->GetCellData()->GetArray( i )->GetComponent( j , k ) << std::endl ;
+                    std::cout << "11" << std::endl ;
+                    return 11 ;
+                }
+            }
+        }
+    }
+        return 0;
 }
 
 //
@@ -247,36 +275,35 @@ int RegressionTestPolyData(const char *testImageFilename,
 // 3) append the original suffix.
 // It the file exists, increment x and continue
 //
-std::map<std::string, int> RegressionTestBaselines(char *baselineFilename)
+std::map< std::string , int > RegressionTestBaselines( char *baselineFilename )
 {
-  std::map<std::string, int> baselines;
-  baselines[std::string(baselineFilename)] = 0;
+    std::map< std::string , int > baselines ;
+    baselines[ std::string( baselineFilename ) ] = 0 ;
 
-  std::string originalBaseline(baselineFilename);
+    std::string originalBaseline( baselineFilename ) ;
 
-  int                    x = 0;
-  std::string::size_type suffixPos = originalBaseline.rfind(".");
-  std::string            suffix;
-  if( suffixPos != std::string::npos )
+    int                    x = 0 ;
+    std::string::size_type suffixPos = originalBaseline.rfind(".") ;
+    std::string            suffix ;
+    if( suffixPos != std::string::npos )
     {
-    suffix = originalBaseline.substr( suffixPos, originalBaseline.length() );
-    originalBaseline.erase( suffixPos, originalBaseline.length() );
+        suffix = originalBaseline.substr( suffixPos, originalBaseline.length() ) ;
+        originalBaseline.erase( suffixPos, originalBaseline.length() ) ;
     }
-  while( ++x )
+    while( ++x )
     {
-    std::ostringstream filename;
-    filename << originalBaseline << "." << x << suffix;
-    std::ifstream filestream( filename.str().c_str() );
-    if( !filestream )
-      {
-      break;
-      }
-    baselines[filename.str()] = 0;
-    filestream.close();
+        std::ostringstream filename ;
+        filename << originalBaseline << "." << x << suffix ;
+        std::ifstream filestream( filename.str().c_str() ) ;
+        if( !filestream )
+        {
+            break ;
+        }
+        baselines[ filename.str() ] = 0 ;
+        filestream.close() ;
     }
 
-  return baselines;
+    return baselines ;
 }
 
 #endif
-
