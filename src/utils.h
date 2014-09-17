@@ -16,7 +16,7 @@ std::string Convert( T number ) ;
 
 std::vector< std::vector < std::string  > > ConvertArray( std::vector< std::vector< float > > array ) ;
 
-int FindMaxNbofCols( std::vector< std::vector< std::string > > vecData ) ;
+int FindMaxNbOfCols( std::vector< std::vector< std::string > > vecData ) ;
 
 template< class T >
 std::string Convert( T number )

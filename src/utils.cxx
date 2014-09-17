@@ -31,7 +31,7 @@ std::vector< std::vector < std::string  > > ConvertArray( std::vector< std::vect
 }
 
 
-int FindMaxNbofCols( std::vector< std::vector< std::string > > vecData )
+int FindMaxNbOfCols( std::vector< std::vector< std::string > > vecData )
 {
     int max = 0 ;
     for( int i = 0 ; i < vecData.size() ; i++ )
