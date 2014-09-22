@@ -37,6 +37,7 @@
 #include "utils.h"
 
 
+
 processing::processing( int visuAttribute )
 {
     visualize = visuAttribute ;
@@ -49,7 +50,7 @@ void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector
     csv csvFile ;
     std::vector< std::vector < std::string > > headerData ;
     std::vector< std::string > buff ;
-    char logFileName[] = "logcrop.csv" ;
+    char logFileName[] = "log.csv" ;
     buff.push_back("Fiber File Input: " ) ;
     buff.push_back( fileName.input ) ;
     headerData.push_back( buff ) ;
@@ -178,6 +179,29 @@ void processing::WriteFiberFile( vtkSmartPointer< vtkPolyData > polyData , std::
     }
 }
 
+int processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData )
+{
+    std::vector< std::vector< float > > pointData ;
+    vtkPoints* Points = polyData->GetPoints() ;
+    vtkCellArray* Lines = polyData->GetLines() ;
+    vtkIdType* Ids ;
+    vtkIdType NumberOfPoints ;
+    vtkIdType NewId = 0 ;
+    Lines->InitTraversal() ;
+    const int nfib = polyData->GetNumberOfCells() ;
+    for( int fiberId = 0 ; Lines->GetNextCell( NumberOfPoints , Ids ) ; fiberId++ )
+    {
+        for( int pointId = 0 ; pointId < NumberOfPoints ; pointId ++ )
+        {
+            if( std::isnan( vecPointData[ fiberId ][ pointId ] ) != 0 )
+            {
+                std::cout<<"vecPointData[" << fiberId <<"][" << pointId <<"] = " << vecPointData[ fiberId ][ pointId ]<<std::endl ;
+                return 1 ;
+            }
+        }
+    }
+}
+
 std::vector< std::vector< float > > processing::ApplyMaskToFiber(vtkSmartPointer< vtkPolyData > polyData , std::string maskFileName )
 {
     typedef itk::Image< int , 3 > ImageType ;
@@ -269,7 +293,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         int compteur = 0 ;
         while( pointId < vecPointData[ fiberId ].size() )
         {
-            pointDataPerFiber.push_back( vecPointData[fiberId][pointId] ) ;
+            pointDataPerFiber.push_back( vecPointData[ fiberId ][ pointId ] ) ;
             NewPoints->InsertNextPoint( Points->GetPoint( Ids[ pointId ] ) ) ;
             NewLine->GetPointIds()->SetId( location , NewId ) ;
             NewId ++ ;
@@ -277,24 +301,13 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
             location++ ;
             compteur++;
         }
-        std::cout<<NumberOfPoints<<" ";
-        std::cout<<compteur<<std::endl;
         pointData.push_back( pointDataPerFiber ) ;
         NewLines->InsertNextCell( NewLine ) ;
     }
-
     cropFiber->SetPoints( NewPoints ) ;
     cropFiber->SetLines( NewLines ) ;
     cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 0 ) ) ;
     cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 1 ) ) ;
-    /*for( int i = 0 ; i < pointData.size() ; i++ )
-    {
-        for( int j = 0 ; j < pointData[i].size() ; j++ )
-        {
-            std::cout<< pointData[i][j]<<" " ;
-        }
-        std::cout<<std::endl;
-    }*/
     cropFiber->GetPointData()->AddArray( CreatePointData( pointData , "InsideMask" ) ) ;
     return cropFiber ;
 }
@@ -451,19 +464,19 @@ std::vector< std::string > processing::ThresholdPolyData( vtkSmartPointer< vtkPo
     return fiberStatus ;
 }
 
-vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber( vtkSmartPointer< vtkPolyData > PolyData )
+vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber(vtkSmartPointer< vtkPolyData > polyData )
 {
     vtkSmartPointer< vtkPolyData > NewPolyData = vtkSmartPointer< vtkPolyData >::New() ;
     vtkSmartPointer<vtkPoints> NewPoints = vtkSmartPointer<vtkPoints>::New() ;
     vtkSmartPointer<vtkCellArray> NewLines = vtkSmartPointer<vtkCellArray>::New() ;
     vtkSmartPointer< vtkDoubleArray > pointData = vtkSmartPointer< vtkDoubleArray >::New() ;
-    vtkPoints* Points = PolyData->GetPoints() ;
-    vtkCellArray* Lines = PolyData->GetLines() ;
+    vtkPoints* Points = polyData->GetPoints() ;
+    vtkCellArray* Lines = polyData->GetLines() ;
     vtkIdType* Ids ;
     vtkIdType NumberOfPoints ;
     int NewId = 0 ;
     Lines->InitTraversal() ;
-    const int nfib = PolyData->GetNumberOfCells() ;
+    const int nfib = polyData->GetNumberOfCells() ;
     for( int i = 0 ; Lines->GetNextCell( NumberOfPoints , Ids ) ; i++ )
     {
         vtkSmartPointer< vtkPolyLine > NewLine = vtkSmartPointer< vtkPolyLine >::New() ;
@@ -478,10 +491,36 @@ vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber( vtkSmartPointer< vtk
     }
     NewPolyData->SetPoints( NewPoints ) ;
     NewPolyData->SetLines( NewLines ) ;
-    PolyData->GetPointData()->GetAbstractArray( 1 )->SetName( "InsideMask" ) ;
-    NewPolyData->GetPointData()->AddArray( PolyData->GetPointData()->GetAbstractArray( 1 ) ) ;
+    polyData->GetPointData()->GetAbstractArray( 1 )->SetName( "InsideMask" ) ;
+    NewPolyData->GetPointData()->AddArray( polyData->GetPointData()->GetAbstractArray( 1 ) ) ;
     return NewPolyData ;
 
+}
+
+std::vector< std::vector< std::string > > processing::GetCellData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName )
+{
+    int arrayId ;
+    for( int i = 0 ; i < polyData->GetCellData()->GetNumberOfArrays() ; i++ )
+    {
+        if( polyData->GetCellData()->GetArrayName( i ) == fieldName )
+        {
+            arrayId = i ;
+            break ;
+        }
+    }
+}
+
+std::vector< std::vector< std::string > > processing::GetPointData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName )
+{
+    int arrayId ;
+    for( int i = 0 ; i < polyData->GetPointData()->GetNumberOfArrays() ; i++ )
+    {
+        if( polyData->GetPointData()->GetArrayName( i ) == fieldName )
+        {
+            arrayId = i ;
+            break ;
+        }
+    }
 }
 
 int processing::processing_main(std::string& inputFileName ,
@@ -527,9 +566,9 @@ int processing::processing_main(std::string& inputFileName ,
     fiberPolyData->GetPointData()->AddArray( pointData ) ;
     WriteFiberFile( fiberPolyData , fileName.output ) ;
     vtkSmartPointer< vtkPolyData > cropFiberPolyData = CropFiber( fiberPolyData , vecPointData ) ;
-    //cleanedFiberPolyData = CleanFiber( fiberPolyData , threshold ) ;
-    //cleanedFiberPolyData = AddPointData( cleanedFiberPolyData ) ;
-    /*vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
+    cleanedFiberPolyData = CleanFiber( fiberPolyData , threshold ) ;
+    cleanedFiberPolyData = AddPointData( cleanedFiberPolyData ) ;
+    vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
     if( visualize )
     {
         visuFiber = CreateVisuFiber( fiberPolyData ) ;
@@ -548,21 +587,16 @@ int processing::processing_main(std::string& inputFileName ,
     {
         std::cout << "File could not be read" << std::endl ;
         return 1 ;
-    }*/
-    //WriteFiberFile( visuFiber , fileName.visu ) ;
-    //WriteFiberFile( cleanedFiberPolyData , fileName.cleaned ) ;
-    WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
-    //WriteLogFile( fileName , vecPointData , threshold , cleanedFiberPolyData , cumul , average ) ;
-    //vecPointData=ApplyMaskToFiber( cropFiberPolyData , maskFileName ) ;
-    /*for( int i = 0 ; i < vecPointData.size() ; i++ )
+    }
+    //vecPointData[0][0] = 0.0 / 0.0 ;
+    if( CheckNaN( fiberPolyData , vecPointData ) == 1 )
     {
-        for( int j = 0 ; j < vecPointData[i].size() ; j++ )
-        {
-            pointData->SetNumberOfComponents( 1 ) ;
-            pointData->SetName( fieldName ) ;
-            pointData->InsertNextValue( vecPointData[ i ][ j ] ) ;
-        }
-    }*/
-    //WriteLogFile( fileName , vecPointData , threshold , cropFiberPolyData , cumul , average ) ;
+        std::cout<<"NaN error"<<std::endl;
+        return 1 ;
+    }
+    WriteFiberFile( visuFiber , fileName.visu ) ;
+    WriteFiberFile( cleanedFiberPolyData , fileName.cleaned ) ;
+    WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
+    WriteLogFile( fileName , vecPointData , threshold , cleanedFiberPolyData , cumul , average ) ;
     return 0 ;
 }

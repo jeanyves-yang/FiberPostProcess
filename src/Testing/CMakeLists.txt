@@ -1,39 +1,40 @@
 # project FiberPostProcess
 
+# Add standard remote object stores to user's
+# configuration.
+list(APPEND ExternalData_URL_TEMPLATES
+  "http://slicer.kitware.com/midas3/api/rest?method=midas.bitstream.download&checksum=%(hash)"
+  )
 set(TEMP_DIR ${FiberPostProcess_BINARY_DIR}/Testing/Temporary )
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Data )
-
-set(BaselineNormalRun ${SOURCE_DIR}/CingulumNormalRun.vtk)
 set(BaselineEmptyMask ${SOURCE_DIR}/CingulumEmptyMask.vtk)
-set(Input ${SOURCE_DIR}/Cingulum.vtk)
 set(Output ${TEMP_DIR}/output.vtk)
 set(OutputCleaned ${TEMP_DIR}/output-cleaned.vtk)
-set(Mask ${SOURCE_DIR}/inputT2-test3.nrrd)
 set(VoidMask ${SOURCE_DIR}/inputnull.nrrd)
-set(IdentityMask ${SOURCE_DIR}/dwi.nrrd)
+
 
 # Test of a normal run of the program
 add_executable(FiberProcessingTest vtkTest.cxx)
 target_link_libraries(FiberProcessingTest FiberPostProcessLib)
-add_test(NAME FiberPostProcess COMMAND $<TARGET_FILE:FiberProcessingTest>
+ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTest1 COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
-  ${BaselineNormalRun}
+  DATA{Data/CingulumNormalRun.vtk}
   ${Output}
   ModuleEntryPoint
-  -i ${Input}
+  -i DATA{Data/Cingulum.vtk}
   -o ${Output}
-  -m ${Mask}
+  -m DATA{Data/inputT2-test3.nrrd}
   -t 0.25
   -v 1
 )
 
 # Test with an empty mask
-add_test(NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTest>
+ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
   ${BaselineEmptyMask}
   ${OutputCleaned}
   ModuleEntryPoint
-  -i ${Input}
+  -i DATA{Data/Cingulum.vtk}
   -o ${Output}
   -m ${VoidMask}
   -t 0.25
@@ -41,14 +42,14 @@ add_test(NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTes
 )
 
 # Test with a mask equal to the input image
-add_test(NAME FiberPostProcessIdentity COMMAND $<TARGET_FILE:FiberProcessingTest>
+ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessIdentity COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
-  ${Input}
+  DATA{Data/Cingulum.vtk}
   ${Output}
   ModuleEntryPoint
-  -i ${Input}
+  -i DATA{Data/Cingulum.vtk}
   -o ${Output}
-  -m ${IdentityMask}
+  -m DATA{Data/dwi.nrrd}
   -t 0.25
   -v 1
 )
@@ -69,3 +70,10 @@ add_test(NAME FiberPostProcessCSVInitColsId COMMAND $<TARGET_FILE:CSVTestInitCol
 
 add_executable(CSVTestInitFull csvTestInitFull.cxx)
 add_test(NAME FiberPostProcessCSVInitFull COMMAND $<TARGET_FILE:CSVTestInitFull>)
+
+# NaN Cases Tests
+add_executable(NaNFunction TestIsNanFunction.cxx)
+add_test(NAME FiberPostProcessNaNFunction COMMAND $<TARGET_FILE:NaNFunction>)
+
+# Add a build target to populate the real data.
+ExternalData_Add_Target(FiberPostProcessData)

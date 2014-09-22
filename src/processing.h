@@ -23,6 +23,7 @@ public:
     template< class T>
     vtkSmartPointer< vtkPolyData > ReadFiberFile( T reader , std::string fiberFile ) ;
     void WriteFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
+    int CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
     std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string maskFileName  ) ;
     vtkSmartPointer< vtkPolyData > CropFiber( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
     void deletePoint( vtkSmartPointer< vtkPoints > fiberPoints , int pointId ) ;
@@ -31,9 +32,12 @@ public:
     vtkSmartPointer< vtkDoubleArray > CreateCellData( std::vector< float > vecCellData , const char* fieldName ) ;
     std::vector< float > CumulValuePerFiber( std::vector< std::vector< float> > pointData ) ;
     std::vector< float > AverageValuePerFiber( std::vector< std::vector< float> > pointData ) ;
-    vtkSmartPointer< vtkPolyData > CleanFiber( vtkSmartPointer< vtkPolyData > PolyData , float threshold ) ;
-    vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > PolyData ) ;
-    vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > PolyData ) ;
+    vtkSmartPointer< vtkPolyData > CleanFiber( vtkSmartPointer< vtkPolyData > polyData , float threshold ) ;
+    vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > polyData ) ;
+    vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > polyData ) ;
+
+    std::vector< std::vector< std::string > > GetCellData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName ) ;
+    std::vector< std::vector< std::string > > GetPointData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName ) ;
     int processing_main(std::string& inputFileName ,
                         std::string& outputFileName ,
                         std::string& maskFileName ,

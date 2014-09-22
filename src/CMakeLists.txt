@@ -8,6 +8,8 @@ project(FiberPostProcess)
 find_package(SlicerExecutionModel REQUIRED)
 include(${SlicerExecutionModel_USE_FILE})
 
+#include(ExternalData)
+
 #Find ITK
 find_package(ITK)
 include(${ITK_USE_FILE})
@@ -16,6 +18,7 @@ include(${ITK_USE_FILE})
 find_package(VTK 6.1 REQUIRED NO MODULE)
 include(${VTK_USE_FILE})
 
+include(ExternalData)
 set(CXX_FILES
 FiberPostProcess.cxx
 processing.cxx
