@@ -21,7 +21,7 @@ Jean-Yves Yang
 
   <file>
   <name>outputFiberFileName</name>
-  <longflag>outputFiberFileName</longflag>
+  <longflag>outputFiber</longflag>
   <label>Output Fiber File Name</label>
   <channel>output</channel>
   <flag>o</flag>
@@ -29,12 +29,12 @@ Jean-Yves Yang
   </file>
 
   <file>
-  <name>MaskFileName</name>
-  <longflag>MaskFileName</longflag>
-  <label>Mask File Name</label>
+  <name>attributeFileName</name>
+  <longflag>AttributeFileName</longflag>
+  <label>Attribute File Name</label>
   <channel>input</channel>
-  <flag>m</flag>
-  <description>mask filename in .nrrd, .nhdr, etc</description>
+  <flag>a</flag>
+  <description>attribute filename in .nrrd, .nhdr, etc, standard attribute is a binary mask.</description>
   </file>
 
   <float>
@@ -47,13 +47,13 @@ Jean-Yves Yang
   </float>
 
   <integer>
-  <name>visualize</name>
-  <longflag>visualize</longflag>
-  <label>Output File visualizable</label>
+  <name>outputAttributeFiberFileName</name>
+  <longflag>outputAttribute</longflag>
+  <label>Output Attribute Fiber File Name</label>
   <channel>input</channel>
   <flag>v</flag>
   <default>0</default>
-  <description>Need to be set at 1 if you want to have an output file and its intersection with the mask visualizable through Slicer. lineData parameter must stay at its default value 0.</description>
+  <description>Need to be set at 1 if you want to have an output file and its intersection with the mask visualizable through Slicer.</description>
   </integer>
 
 
