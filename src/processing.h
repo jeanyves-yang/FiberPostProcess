@@ -24,6 +24,8 @@ public:
     vtkSmartPointer< vtkPolyData > ReadFiberFile( T reader , std::string fiberFile ) ;
     void WriteFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
+    vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) ;
+    std::vector< std::vector< float > > convertDataToVector( vtkSmartPointer< vtkDataArray > array ) ;
     std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string attributeFileName  ) ;
     vtkSmartPointer< vtkPolyData > CropFiber( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
     void deletePoint( vtkSmartPointer< vtkPoints > fiberPoints , int pointId ) ;
@@ -41,6 +43,16 @@ public:
     int processing_main(std::string& inputFileName ,
                         std::string& outputFileName ,
                         std::string& attributeFileName ,
-                        float threshold
+                        float threshold ,
+                        bool flagAttribute
                         ) ;
+    int processing_main(std::string& inputFileName ,
+                        std::string& outputFileName
+                        ) ;
+
+    int processing_main( std::string& inputFileName ,
+                         std::string& outputFileName ,
+                         std::string& attributeFileName,
+                         bool flagAttribute
+                         ) ;
 };

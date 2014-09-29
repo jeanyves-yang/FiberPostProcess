@@ -19,23 +19,35 @@ Jean-Yves Yang
   <description>input fiber filename in .vtk or .vtp</description>
   </file>
 
-  <file>
+  <geometry type="fiberbundle">
   <name>outputFiberFileName</name>
   <longflag>outputFiber</longflag>
   <label>Output Fiber File Name</label>
   <channel>output</channel>
   <flag>o</flag>
   <description>output fiber filename in .vtk or .vtp</description>
-  </file>
+  </geometry>
 
-  <file>
+  <image>
   <name>attributeFileName</name>
-  <longflag>AttributeFileName</longflag>
+  <longflag>attributeFile</longflag>
   <label>Attribute File Name</label>
   <channel>input</channel>
+  <flag>m</flag>
+  <description>attribute filename in .nrrd, .nhdr, etc, such as a probability mask, or FA, MD, etc. Set by default as a binary mask. This parameter is used to crop the beginning and the end of each fiber or to mask the fiber bundle and remove any fiber considered outside of this mask (determined by the threshold parameter).</description>
+  </image>
+
+  <string-enumeration>
+  <name>attribute</name>
+  <longflag>attribute</longflag>
+  <label>Attribute Boolean</label>
+  <channel>input</channel>
   <flag>a</flag>
-  <description>attribute filename in .nrrd, .nhdr, etc, standard attribute is a binary mask.</description>
-  </file>
+  <description>Set by default to binary mode, set the value to nonbinary</description>
+  <element>binary</element>
+  <element>nonbinary</element>
+  <default>binary</default>
+  </string-enumeration>
 
   <float>
   <name>threshold</name>

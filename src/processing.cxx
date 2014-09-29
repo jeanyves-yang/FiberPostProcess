@@ -220,6 +220,37 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
     return newPolyData ;
 }
 
+vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData )
+{
+     vtkSmartPointer< vtkPolyData > cleanedPolyData = polyData ;
+     std::vector< std::vector< std::string > > dataField ;
+     int nbArrays = polyData->GetPointData()->GetNumberOfArrays() ;
+     for( int i = 0 ; i < nbArrays ; i++ )
+     {
+         vtkSmartPointer< vtkDataArray > dataArray = polyData->GetPointData()->GetArray( i ) ;
+         std::vector< std::vector< float > > dataVector = convertDataToVector( dataArray ) ;
+         CheckNaN( cleanedPolyData , dataVector ) ;
+     }
+    return cleanedPolyData ;
+}
+
+std::vector< std::vector< float > > processing::convertDataToVector(vtkSmartPointer<vtkDataArray> array )
+{
+    std::vector< std::vector< float > > dataVector ;
+    int nbComponents = array->GetNumberOfComponents() ;
+    int nbTuples = array->GetNumberOfTuples() ;
+    for( int i = 0 ; i < nbTuples ; i++ )
+    {
+        std::vector< float > tmp ;
+        for( int j = 0 ; j < nbComponents ; j++ )
+        {
+            tmp.push_back( array->GetComponent( i , j ) ) ;
+        }
+        dataVector.push_back( tmp ) ;
+    }
+    return dataVector ;
+}
+
 std::vector< std::vector< float > > processing::ApplyMaskToFiber(vtkSmartPointer< vtkPolyData > polyData , std::string attributeFileName )
 {
     typedef itk::Image< int , 3 > ImageType ;
@@ -539,16 +570,18 @@ std::vector< std::vector< std::string > > processing::GetPointData( vtkSmartPoin
             break ;
         }
     }
-    vtkSmartPointer< vtkDataArray > dataArray = polyData->GetPointData()->GetArray( arrayId ) ;std::cout<<dataArray->GetNumberOfTuples();
-    for( int i = 0 ; i < polyData->GetNumberOfCells() ; i++)
-    {}
+    vtkSmartPointer< vtkDataArray > dataArray = polyData->GetPointData()->GetArray( arrayId ) ;
+    for( int i = 0 ; i < dataArray->GetNumberOfTuples() ; i++)
+    {
+        //std::cout<<dataArray
+    }
     return dataField ;
 }
 
-int processing::processing_main( std::string& inputFileName ,
-                                 std::string& outputFileName ,
-                                 std::string& attributeFileName ,
-                                 float threshold )
+int processing::processing_main(std::string& inputFileName ,
+                                std::string& outputFileName ,
+                                std::string& attributeFileName ,
+                                float threshold , bool flagAttribute )
 {
     processing::fileNameStruct fileName ;
     fileName.input = inputFileName ;
@@ -576,7 +609,10 @@ int processing::processing_main( std::string& inputFileName ,
     }
     //FindAllData( fiberPolyData ) ;
     std::vector< std::vector< float > > vecPointData ;
-    vecPointData = ApplyMaskToFiber( fiberPolyData , attributeFileName ) ;
+    if( flagAttribute == 0 )
+    {
+        vecPointData = ApplyMaskToFiber( fiberPolyData , attributeFileName ) ;
+    }
     std::vector< float > cumul = CumulValuePerFiber( vecPointData ) ;
     std::vector< float > average = AverageValuePerFiber( vecPointData ) ;
     vtkSmartPointer< vtkDoubleArray > cellData , cellData2 ;
@@ -618,5 +654,99 @@ int processing::processing_main( std::string& inputFileName ,
     WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
     WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
     WriteLogFile( fileName , vecPointData , threshold , cleanedFiberPolyData , cumul , average ) ;
+    return 0 ;
+}
+
+int processing::processing_main( std::string& inputFileName ,
+                                 std::string& outputFileName )
+{
+    typedef itk::Image< int , 3 > ImageType ;
+    typedef itk::ImageFileReader< ImageType > ReaderType ;
+    vtkSmartPointer< vtkPolyData > fiberPolyData ;
+    vtkSmartPointer< vtkPolyData > cleanedFiberPolyData ;
+    std::string extension = ExtensionOfFile( inputFileName ) ;
+    if( extension.rfind("vtk") != std::string::npos )
+    {
+        vtkSmartPointer< vtkPolyDataReader > fiberPolyDataReader = vtkSmartPointer< vtkPolyDataReader >::New() ;
+        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        vtkSmartPointer<vtkXMLPolyDataReader> fiberPolyDataReader = vtkSmartPointer< vtkXMLPolyDataReader >::New() ;
+        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
+    }
+    else
+    {
+        std::cout << "File could not be read" << std::endl ;
+        return 1 ;
+    }
+    std::vector< std::vector< float > > vecPointData ;
+    vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
+    GetPointData( fiberPolyData , "InsideMask" ) ;
+    cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
+    WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
+    return 0 ;
+}
+
+int processing::processing_main(std::string& inputFileName ,
+                                std::string& outputFileName ,
+                                std::string& attributeFileName ,
+                                bool flagAttribute )
+{
+    processing::fileNameStruct fileName ;
+    fileName.input = inputFileName ;
+    fileName.output = outputFileName ;
+    fileName.mask = attributeFileName ;
+    typedef itk::Image< int , 3 > ImageType ;
+    typedef itk::ImageFileReader< ImageType > ReaderType ;
+    vtkSmartPointer< vtkPolyData > fiberPolyData ;
+    vtkSmartPointer< vtkPolyData > cleanedFiberPolyData ;
+    std::string extension = ExtensionOfFile( inputFileName ) ;
+    if( extension.rfind("vtk") != std::string::npos )
+    {
+        vtkSmartPointer< vtkPolyDataReader > fiberPolyDataReader = vtkSmartPointer< vtkPolyDataReader >::New() ;
+        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        vtkSmartPointer<vtkXMLPolyDataReader> fiberPolyDataReader = vtkSmartPointer< vtkXMLPolyDataReader >::New() ;
+        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
+    }
+    else
+    {
+        std::cout << "File could not be read" << std::endl ;
+        return 1 ;
+    }
+    std::vector< std::vector< float > > vecPointData ;
+    vecPointData = ApplyMaskToFiber( fiberPolyData , attributeFileName ) ;
+    vtkSmartPointer< vtkDoubleArray > pointData =  CreatePointData( vecPointData , "InsideMask" ) ;
+    fiberPolyData->GetPointData()->AddArray( pointData ) ;
+    WriteFiberFile( fiberPolyData , fileName.output ) ;
+    vtkSmartPointer< vtkPolyData > cropFiberPolyData = CropFiber( fiberPolyData , vecPointData ) ;
+    vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
+    if( visualize )
+    {
+        visuFiber = CreateVisuFiber( fiberPolyData ) ;
+    }
+    if( extension.rfind( "vtk" ) != std::string::npos )
+    {
+        fileName.visu =  ChangeEndOfFileName( outputFileName , "-visu.vtk" ) ;
+        fileName.cleaned = ChangeEndOfFileName( outputFileName , "-cleaned.vtk" ) ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        fileName.visu = ChangeEndOfFileName( outputFileName , "-visu.vtp" ) ;
+        fileName.cleaned = ChangeEndOfFileName( outputFileName , "-cleaned.vtp" ) ;
+    }
+    else
+    {
+        std::cout << "File could not be read" << std::endl ;
+        return 1 ;
+    }
+    WriteFiberFile( visuFiber , fileName.visu ) ;
+    GetPointData( fiberPolyData , "InsideMask" ) ;
+    cleanedFiberPolyData = CheckNaN( fiberPolyData , vecPointData ) ;
+    WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
+    WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
     return 0 ;
 }
