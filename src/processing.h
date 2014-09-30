@@ -3,10 +3,12 @@
 #include <sstream>
 #include "utils.h"
 
-class processing{
-    int visualize ;
+class processing
+{
+
 public:
-    struct fileNameStruct{
+    struct fileNameStruct
+    {
         std::string input ;
         std::string mask ;
         std::string visu ;
@@ -14,8 +16,14 @@ public:
         std::string cleaned ;
     };
 
-    processing( int ) ;
-
+    processing() ;
+    void SetInputFileName( std::string inputFiberFileName ) ;
+    void SetOutputFileName( std::string outputFiberFileName ) ;
+    void SetVisualisation( int visualisationFlag ) ;
+    void SetAttributeFileName( std::string attributeFileName ) ;
+    void SetThresholdFlag( int thresholdFlag ) ;
+    void SetAttributeFlag( int attributeFlag ) ;
+//to put in protected !!!
     void WriteLogFile(fileNameStruct fileName , std::vector< std::vector< float> > data ,
                       float threshold , vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector<float> cumul , std::vector<float> average) ;
     void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
@@ -23,7 +31,7 @@ public:
     template< class T>
     vtkSmartPointer< vtkPolyData > ReadFiberFile( T reader , std::string fiberFile ) ;
     void WriteFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
-    vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
+    vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;//change name
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) ;
     std::vector< std::vector< float > > convertDataToVector( vtkSmartPointer< vtkDataArray > array ) ;
     std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string attributeFileName  ) ;
@@ -40,19 +48,14 @@ public:
 
     std::vector< std::vector< std::string > > GetCellData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName ) ;
     std::vector< std::vector< std::string > > GetPointData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName ) ;
-    int processing_main(std::string& inputFileName ,
-                        std::string& outputFileName ,
-                        std::string& attributeFileName ,
-                        float threshold ,
-                        bool flagAttribute
-                        ) ;
-    int processing_main(std::string& inputFileName ,
-                        std::string& outputFileName
-                        ) ;
+    int run() ;
 
-    int processing_main( std::string& inputFileName ,
-                         std::string& outputFileName ,
-                         std::string& attributeFileName,
-                         bool flagAttribute
-                         ) ;
-};
+private:
+    int Visualize ;
+    std::string InputFileName ;
+    std::string OutputFileName ;
+    std::string AttributeFileName ;
+    int FlagAttribute ;
+    int FlagThreshold ;
+    float Threshold ;
+}

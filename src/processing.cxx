@@ -38,10 +38,29 @@
 
 
 
-processing::processing( int visuAttribute )
+processing::processing()
 {
-    visualize = visuAttribute ;
 }
+
+void processing::SetInputFileName( std::string inputFiberFileName )
+{
+    InputFileName = inputFiberFileName ;
+}
+void processing::SetOutputFileName( std::string outputFiberFileName )
+{
+    OutputFileName = outputFiberFileName ;
+}
+void processing::SetVisualisation( int visualisationFlag )
+{
+    Visualize = visualisationFlag ;
+}
+void processing::SetAttributeFileName( std::string attributeFileName )
+{
+    AttributeFileName = attributeFileName ;
+}
+
+void processing::processing::SetThresholdFlag( int thresholdFlag ) ;
+void processing::SetAttributeFlag( int attributeFlag ) ;
 
 void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector< std::vector< float> > vecPointData , float threshold ,
                                vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector< float > cumul , std::vector< float > average )
@@ -220,7 +239,7 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
     return newPolyData ;
 }
 
-vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData )
+vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) // compute the fa on the tensors
 {
      vtkSmartPointer< vtkPolyData > cleanedPolyData = polyData ;
      std::vector< std::vector< std::string > > dataField ;
@@ -320,7 +339,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         std::vector< float > pointDataPerFiber ;
         vtkSmartPointer< vtkPolyLine > NewLine = vtkSmartPointer< vtkPolyLine >::New() ;
         int pointId = 0 ;
-        while( vecPointData[ fiberId ][ pointId ] == 0 )
+        while( vecPointData[ fiberId ][ pointId ] == 0 ) //test
         {
             pointId++ ;
         }
@@ -332,7 +351,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         {
             NumberOfPoints = NumberOfPoints - pointId ;
         }
-        while( vecPointData[ fiberId ][ vecPointData[ fiberId ].size() - endOfFiber -1 ] < epsilon && endOfFiber < vecPointData[ fiberId ].size() )
+        while( vecPointData[ fiberId ][ vecPointData[ fiberId ].size() - endOfFiber -1 ] < epsilon && endOfFiber < vecPointData[ fiberId ].size() ) //TODO: add to the XML
         {
             endOfFiber++ ;
         }
@@ -648,7 +667,6 @@ int processing::processing_main(std::string& inputFileName ,
     }
     WriteFiberFile( cleanedFiberPolyData , fileName.cleaned ) ;
     WriteFiberFile( visuFiber , fileName.visu ) ;
-    //vecPointData[0][0] = 0.0 / 0.0 ;
     GetPointData( fiberPolyData , "InsideMask" ) ;
     //cleanedFiberPolyData = CheckNaN( fiberPolyData , vecPointData ) ;
     WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
@@ -722,7 +740,6 @@ int processing::processing_main(std::string& inputFileName ,
     vtkSmartPointer< vtkDoubleArray > pointData =  CreatePointData( vecPointData , "InsideMask" ) ;
     fiberPolyData->GetPointData()->AddArray( pointData ) ;
     WriteFiberFile( fiberPolyData , fileName.output ) ;
-    vtkSmartPointer< vtkPolyData > cropFiberPolyData = CropFiber( fiberPolyData , vecPointData ) ;
     vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
     if( visualize )
     {
@@ -746,7 +763,7 @@ int processing::processing_main(std::string& inputFileName ,
     WriteFiberFile( visuFiber , fileName.visu ) ;
     GetPointData( fiberPolyData , "InsideMask" ) ;
     cleanedFiberPolyData = CheckNaN( fiberPolyData , vecPointData ) ;
-    WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
+    vtkSmartPointer< vtkPolyData > cropFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
     WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
     return 0 ;
 }

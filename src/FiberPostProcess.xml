@@ -40,7 +40,7 @@ Jean-Yves Yang
   <string-enumeration>
   <name>attribute</name>
   <longflag>attribute</longflag>
-  <label>Attribute Boolean</label>
+  <label>Is attribute a mask</label>
   <channel>input</channel>
   <flag>a</flag>
   <description>Set by default to binary mode, set the value to nonbinary</description>
@@ -59,16 +59,14 @@ Jean-Yves Yang
   </float>
 
   <integer>
-  <name>outputAttributeFiberFileName</name>
-  <longflag>outputAttribute</longflag>
-  <label>Output Attribute Fiber File Name</label>
+  <name>visualisationFlag</name>
+  <longflag>noTensor</longflag>
+  <label>Write a visualizable output file (remove tensors)</label>
   <channel>input</channel>
   <flag>v</flag>
   <default>0</default>
   <description>Need to be set at 1 if you want to have an output file and its intersection with the mask visualizable through Slicer.</description>
   </integer>
-
-
 
 </parameters>
 
