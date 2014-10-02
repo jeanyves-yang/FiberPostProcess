@@ -25,7 +25,7 @@ int main( int argc , char* argv[] )
   bool thresholdFlag = false ;
   if( attributeFileName.empty() )
   {
-      flagBinaryMask = true ;
+      attributeFlag = true ;
   }
   for( int i = 0 ; i < argc ; i++ )
   {
@@ -34,7 +34,7 @@ int main( int argc , char* argv[] )
           thresholdFlag = true ;
       }
   }
-  processing FiberProcessing() ;
+  processing FiberProcessing ;
   FiberProcessing.SetInputFileName( inputFiberFileName ) ;
   FiberProcessing.SetOutputFileName( outputFiberFileName ) ;
   FiberProcessing.SetVisualisation( visualisationFlag ) ;

@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <vector>
-
+#include <vtkMath.h>
 std::string ExtensionOfFile( std::string fileName ) ;
 
 std::string ChangeEndOfFileName (std::string fileName, std::string change ) ;

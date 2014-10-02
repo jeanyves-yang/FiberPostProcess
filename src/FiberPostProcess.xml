@@ -37,18 +37,6 @@ Jean-Yves Yang
   <description>attribute filename in .nrrd, .nhdr, etc, such as a probability mask, or FA, MD, etc. Set by default as a binary mask. This parameter is used to crop the beginning and the end of each fiber or to mask the fiber bundle and remove any fiber considered outside of this mask (determined by the threshold parameter).</description>
   </image>
 
-  <string-enumeration>
-  <name>attribute</name>
-  <longflag>attribute</longflag>
-  <label>Is attribute a mask</label>
-  <channel>input</channel>
-  <flag>a</flag>
-  <description>Set by default to binary mode, set the value to nonbinary</description>
-  <element>binary</element>
-  <element>nonbinary</element>
-  <default>binary</default>
-  </string-enumeration>
-
   <float>
   <name>threshold</name>
   <longflag>threshold</longflag>

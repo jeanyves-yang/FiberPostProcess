@@ -5,7 +5,6 @@
 
 class processing
 {
-
 public:
     struct fileNameStruct
     {
@@ -13,7 +12,7 @@ public:
         std::string mask ;
         std::string visu ;
         std::string output ;
-        std::string cleaned ;
+        std::string log ;
     };
 
     processing() ;
@@ -25,7 +24,7 @@ public:
     void SetAttributeFlag( int attributeFlag ) ;
 //to put in protected !!!
     void WriteLogFile(fileNameStruct fileName , std::vector< std::vector< float> > data ,
-                      float threshold , vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector<float> cumul , std::vector<float> average) ;
+                      vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector<float> cumul , std::vector<float> average) ;
     void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     int FindMaxNbOfPoints( vtkSmartPointer< vtkPolyData > polyData ) ;
     template< class T>
@@ -34,10 +33,10 @@ public:
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;//change name
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) ;
     std::vector< std::vector< float > > convertDataToVector( vtkSmartPointer< vtkDataArray > array ) ;
-    std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData , std::string attributeFileName  ) ;
+    std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData  ) ;
     vtkSmartPointer< vtkPolyData > CropFiber( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
     void deletePoint( vtkSmartPointer< vtkPoints > fiberPoints , int pointId ) ;
-    std::vector< std::string > ThresholdPolyData( vtkSmartPointer< vtkPolyData > polyData , float threshold ) ;
+    std::vector< std::string > ThresholdPolyData( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkDoubleArray > CreatePointData( std::vector< std::vector< float> > vecPointData , const char* fieldName ) ;
     vtkSmartPointer< vtkDoubleArray > CreateCellData( std::vector< float > vecCellData , const char* fieldName ) ;
     std::vector< float > CumulValuePerFiber( std::vector< std::vector< float> > pointData ) ;
@@ -51,11 +50,11 @@ public:
     int run() ;
 
 private:
-    int Visualize ;
+    int Visualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
     std::string InputFileName ;
     std::string OutputFileName ;
-    std::string AttributeFileName ;
-    int FlagAttribute ;
+    std::string AttributeFileName ; // name of the attribute/mask file
+    int FlagAttribute ; // 0 if there is a mask, 1 if there is no mask
     int FlagThreshold ;
     float Threshold ;
-}
+};
