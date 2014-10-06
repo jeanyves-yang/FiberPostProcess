@@ -44,9 +44,6 @@ public:
     vtkSmartPointer< vtkPolyData > CleanFiber( vtkSmartPointer< vtkPolyData > polyData , float threshold ) ;
     vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > polyData ) ;
-
-    std::vector< std::vector< std::string > > GetCellData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName ) ;
-    std::vector< std::vector< std::string > > GetPointData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName ) ;
     int run() ;
 
 private:

@@ -37,6 +37,7 @@
 #include "utils.h"
 
 #include <vtkMath.h>
+#include <vtkCellLocator.h>
 
 /* allocate memory for an nrow x ncol matrix */
 template< class TReal>
@@ -253,7 +254,7 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
             }
             else
             {
-                newPoints->InsertNextPoint( points->GetPoint( ids[pointId] ) ) ;
+                newPoints->InsertNextPoint( points->GetPoint( ids[ pointId ] ) ) ;
                 newLine->GetPointIds()->SetId( pointId , newId ) ;
                 newId++ ;
             }
@@ -270,18 +271,34 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
 
 vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) // compute the fa on the tensors
 {
+   /* //vtkSmartPointer< vtkDoubleArray > processing::CreateCellData(std::vector< float > vecCellData , const char *fieldName )
+
+    for( int i = 0 ; i < vecCellData.size() ; i++ )
+    {
+        cellData->SetNumberOfComponents( 1 ) ;
+        cellData->SetName( fieldName ) ;
+        cellData->InsertNextValue( vecCellData[ i ] ) ;*/
      vtkSmartPointer< vtkPolyData > cleanedPolyData = polyData ;
+     vtkSmartPointer< vtkDoubleArray > cellData = vtkSmartPointer< vtkDoubleArray >::New() ;
+     cellData->SetNumberOfComponents( 1 ) ;
+     cellData->SetName( "NaNCases") ;
+     int nanTensorFlag = 0 ;
      std::vector< std::vector< std::string > > dataField ;
      int nbArrays = polyData->GetPointData()->GetNumberOfArrays() ;
+     std::vector< int > NanFiberId ;
      for( int i = 0 ; i < nbArrays ; i++ )
      {
-         if( strcmp( polyData->GetPointData()->GetArray( i )->GetName() , "tensors") == 0 )
+         if( strcmp( polyData->GetPointData()->GetArray( i )->GetName() , "tensors" ) == 0 )
          {
              int nbComponents, nbTuples ;
              nbComponents = polyData->GetPointData()->GetArray( i )->GetNumberOfComponents() ;
              nbTuples = polyData->GetPointData()->GetArray( i )->GetNumberOfTuples() ;
              for( int j = 0 ; j < nbTuples ; j++ )
              {
+
+                 NanFiberId.push_back( -1 ) ;
+                 double eigenValues[ 3 ] ;
+                 double **eigenVectors = create_matrix< double > ( 3, 3 ) ;
                  double **tensors = create_matrix< double >( 3, 3 ) ;
                  tensors[ 0 ][ 0 ] = polyData->GetPointData()->GetArray( i )->GetComponent( j , 0 ) ;
                  tensors[ 0 ][ 1 ] = polyData->GetPointData()->GetArray( i )->GetComponent( j , 1 ) ;
@@ -294,6 +311,15 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
                  tensors[ 2 ][ 0 ] = polyData->GetPointData()->GetArray( i )->GetComponent( j , 6 ) ;
                  tensors[ 2 ][ 1 ] = polyData->GetPointData()->GetArray( i )->GetComponent( j , 7 ) ;
                  tensors[ 2 ][ 2 ] = polyData->GetPointData()->GetArray( i )->GetComponent( j , 8 ) ;
+                 vtkMath::Jacobi( tensors , eigenValues , eigenVectors ) ;
+                 for( int  k = 0 ; k < 3 ; k ++ )
+                 {
+                     if( eigenValues [ k ] < 0 )
+                     {
+                         NanFiberId.push_back( j ) ;
+                     }
+
+                 }
                  free_matrix ( tensors ) ;
              }
          }
@@ -301,7 +327,24 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
          std::vector< std::vector< float > > dataVector = convertDataToVector( dataArray ) ;
          CheckNaN( cleanedPolyData , dataVector ) ;
      }
-    return cleanedPolyData ;
+     vtkCellArray* lines = polyData->GetLines() ;
+     vtkIdType numberOfPoints ;
+     vtkIdType* ids ;
+     lines->InitTraversal() ;
+     vtkSmartPointer< vtkCellLocator > locateFiber = vtkSmartPointer< vtkCellLocator >::New() ;
+     for( int i = 0 ; lines->GetNextCell( numberOfPoints , ids ) ; i++ )
+     {
+         if( std::find(NanFiberId.begin(), NanFiberId.end(), i ) != NanFiberId.end() )
+         {
+             cellData->InsertNextValue( locateFiber->FindCell( polyData->GetPoint( std::find(NanFiberId.begin(), NanFiberId.end(), i ) - NanFiberId.begin() ) ) ) ;
+         }
+         else
+         {
+             cellData->InsertNextValue( -1 ) ;
+         }
+     }
+     cleanedPolyData->GetCellData()->AddArray( cellData ) ;
+     return cleanedPolyData ;
 }
 
 std::vector< std::vector< float > > processing::convertDataToVector(vtkSmartPointer<vtkDataArray> array )
@@ -539,7 +582,9 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     {
         vtkSmartPointer< vtkPolyLine > newLine = vtkSmartPointer< vtkPolyLine >::New() ;
         newLine->GetPointIds()->SetNumberOfIds( numberOfPoints ) ;
-        if( fiberReadArray->GetValue( i ) <= threshold )
+        vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
+        fiberReadArray = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "NanCases" ) ) ;
+        if( fiberReadArray->GetValue( i ) <= threshold && fiberReadArray->GetValue( i ) == 0 )
         {
             for( int j = 0 ; j < numberOfPoints ; j ++ )
             {
@@ -615,39 +660,6 @@ vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber(vtkSmartPointer< vtkP
 
 }
 
-std::vector< std::vector< std::string > > processing::GetCellData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName )
-{
-    int arrayId ;
-    for( int i = 0 ; i < polyData->GetCellData()->GetNumberOfArrays() ; i++ )
-    {
-        if( polyData->GetCellData()->GetArrayName( i ) == fieldName )
-        {
-            arrayId = i ;
-            break ;
-        }
-    }
-}
-
-std::vector< std::vector< std::string > > processing::GetPointData( vtkSmartPointer< vtkPolyData > polyData , char * fieldName )
-{
-    int arrayId ;
-    std::vector< std::vector< std::string > > dataField ;
-    for( int i = 0 ; i < polyData->GetPointData()->GetNumberOfArrays() ; i++ )
-    {
-        if( strcmp( polyData->GetPointData()->GetArrayName( i ) , fieldName ) ==0 )
-        {
-            arrayId = i ;
-            break ;
-        }
-    }
-    vtkSmartPointer< vtkDataArray > dataArray = polyData->GetPointData()->GetArray( arrayId ) ;
-    for( int i = 0 ; i < dataArray->GetNumberOfTuples() ; i++)
-    {
-        //std::cout<<dataArray
-    }
-    return dataField ;
-}
-
 int processing::run()
 {
     processing::fileNameStruct fileName ;
@@ -690,8 +702,7 @@ int processing::run()
         fiberPolyData->GetPointData()->AddArray( pointData ) ;
     }
     vtkSmartPointer< vtkPolyData > cropFiberPolyData = CropFiber( fiberPolyData , vecPointData ) ;
-    cleanedFiberPolyData = CleanFiber( fiberPolyData , Threshold ) ;
-    cleanedFiberPolyData = AddPointData( cleanedFiberPolyData ) ;
+
     vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
     if( Visualize )
     {
@@ -713,107 +724,14 @@ int processing::run()
     WriteFiberFile( fiberPolyData , fileName.output ) ;
     WriteFiberFile( cleanedFiberPolyData , fileName.log) ;
     WriteFiberFile( visuFiber , fileName.visu ) ;
-    GetPointData( fiberPolyData , "InsideMask" ) ;
     cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
+   /* cleanedFiberPolyData = CleanFiber( fiberPolyData , Threshold ) ;
+    cleanedFiberPolyData = AddPointData( cleanedFiberPolyData ) ;
     WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
     WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
     if( FlagAttribute == 0 )
     {
         WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
-    }
+    }*/
     return 0 ;
 }
-
-/*int processing::processing_main( std::string& inputFileName ,
-                                 std::string& outputFileName )
-{
-    typedef itk::Image< int , 3 > ImageType ;
-    typedef itk::ImageFileReader< ImageType > ReaderType ;
-    vtkSmartPointer< vtkPolyData > fiberPolyData ;
-    vtkSmartPointer< vtkPolyData > cleanedFiberPolyData ;
-    std::string extension = ExtensionOfFile( inputFileName ) ;
-    if( extension.rfind("vtk") != std::string::npos )
-    {
-        vtkSmartPointer< vtkPolyDataReader > fiberPolyDataReader = vtkSmartPointer< vtkPolyDataReader >::New() ;
-        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
-    }
-    else if( extension.rfind("vtp") != std::string::npos )
-    {
-        vtkSmartPointer<vtkXMLPolyDataReader> fiberPolyDataReader = vtkSmartPointer< vtkXMLPolyDataReader >::New() ;
-        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
-    }
-    else
-    {
-        std::cout << "File could not be read" << std::endl ;
-        return 1 ;
-    }
-    std::vector< std::vector< float > > vecPointData ;
-    vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
-    GetPointData( fiberPolyData , "InsideMask" ) ;
-    cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
-    WriteFiberFile( cleanedFiberPolyData , "NanCleanedFiber.vtk" ) ;
-    return 0 ;
-}
-
-int processing::processing_main(std::string& inputFileName ,
-                                std::string& outputFileName ,
-                                std::string& attributeFileName ,
-                                bool flagAttribute )
-{
-    processing::fileNameStruct fileName ;
-    fileName.input = inputFileName ;
-    fileName.output = outputFileName ;
-    fileName.mask = attributeFileName ;
-    typedef itk::Image< int , 3 > ImageType ;
-    typedef itk::ImageFileReader< ImageType > ReaderType ;
-    vtkSmartPointer< vtkPolyData > fiberPolyData ;
-    vtkSmartPointer< vtkPolyData > cleanedFiberPolyData ;
-    std::string extension = ExtensionOfFile( inputFileName ) ;
-    if( extension.rfind("vtk") != std::string::npos )
-    {
-        vtkSmartPointer< vtkPolyDataReader > fiberPolyDataReader = vtkSmartPointer< vtkPolyDataReader >::New() ;
-        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
-    }
-    else if( extension.rfind("vtp") != std::string::npos )
-    {
-        vtkSmartPointer<vtkXMLPolyDataReader> fiberPolyDataReader = vtkSmartPointer< vtkXMLPolyDataReader >::New() ;
-        fiberPolyData = ReadFiberFile( fiberPolyDataReader, inputFileName ) ;
-    }
-    else
-    {
-        std::cout << "File could not be read" << std::endl ;
-        return 1 ;
-    }
-    std::vector< std::vector< float > > vecPointData ;
-    vecPointData = ApplyMaskToFiber( fiberPolyData , attributeFileName ) ;
-    vtkSmartPointer< vtkDoubleArray > pointData =  CreatePointData( vecPointData , "InsideMask" ) ;
-    fiberPolyData->GetPointData()->AddArray( pointData ) ;
-    WriteFiberFile( fiberPolyData , fileName.output ) ;
-    vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
-    if( visualize )
-    {
-        visuFiber = CreateVisuFiber( fiberPolyData ) ;
-    }
-    if( extension.rfind( "vtk" ) != std::string::npos )
-    {
-        fileName.visu =  ChangeEndOfFileName( outputFileName , "-visu.vtk" ) ;
-        fileName.cleaned = ChangeEndOfFileName( outputFileName , "-cleaned.vtk" ) ;
-    }
-    else if( extension.rfind("vtp") != std::string::npos )
-    {
-        fileName.visu = ChangeEndOfFileName( outputFileName , "-visu.vtp" ) ;
-        fileName.cleaned = ChangeEndOfFileName( outputFileName , "-cleaned.vtp" ) ;
-    }
-    else
-    {
-        std::cout << "File could not be read" << std::endl ;
-        return 1 ;
-    }
-    WriteFiberFile( visuFiber , fileName.visu ) ;
-    GetPointData( fiberPolyData , "InsideMask" ) ;
-    cleanedFiberPolyData = CheckNaN( fiberPolyData , vecPointData ) ;
-    vtkSmartPointer< vtkPolyData > cropFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
-    WriteFiberFile( cropFiberPolyData , "croppedFiber.vtk") ;
-    return 0 ;
-}
-*/
