@@ -420,6 +420,9 @@ std::vector< std::vector< float > > processing::ApplyMaskToFiber(vtkSmartPointer
 vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData )
 {
     float epsilon = 0.000001f ;
+    vtkSmartPointer< vtkDoubleArray > newTensors = vtkSmartPointer< vtkDoubleArray >::New() ;
+    newTensors->SetName( "tensors" ) ;
+    vtkSmartPointer< vtkDataArray > tensors = polyData->GetPointData()->GetArray( "tensors" ) ;
     vtkSmartPointer< vtkPolyData > cropFiber = vtkSmartPointer< vtkPolyData >::New() ;
     vtkSmartPointer<vtkPoints> NewPoints = vtkSmartPointer<vtkPoints>::New() ;
     std::vector< std::vector< float > > pointData ;
@@ -458,6 +461,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         int compteur = 0 ;
         while( pointId < vecPointData[ fiberId ].size() - endOfFiber )
         {
+            newTensors->InsertNextTupleValue( tensors->GetTuple9( pointId ) ) ;
             pointDataPerFiber.push_back( vecPointData[ fiberId ][ pointId ] ) ;
             NewPoints->InsertNextPoint( Points->GetPoint( Ids[ pointId ] ) ) ;
             NewLine->GetPointIds()->SetId( location , NewId ) ;
@@ -474,6 +478,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
     cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 0 ) ) ;
     cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 1 ) ) ;
     cropFiber->GetPointData()->AddArray( CreatePointData( pointData , "InsideMask" ) ) ;
+    cropFiber->GetPointData()->AddArray( newTensors ) ;
     return cropFiber ;
 }
 
@@ -728,7 +733,6 @@ int processing::run()
         return 1 ;
     }
     cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
-    cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
     if( !FlagClean )
     {
         cleanedFiberPolyData->GetPointData()->AddArray( tensors ) ;
@@ -740,6 +744,7 @@ int processing::run()
             cleanedFiberPolyData = CleanFiber( fiberPolyData , Threshold ) ;
         }
     }
+    cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
     WriteFiberFile( visuFiber , fileName.visu ) ;
     WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
     //if( FlagAttribute == 0 )
