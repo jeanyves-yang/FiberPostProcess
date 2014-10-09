@@ -22,6 +22,7 @@ public:
     void SetAttributeFileName( std::string attributeFileName ) ;
     void SetThresholdFlag( int thresholdFlag ) ;
     void SetAttributeFlag( int attributeFlag ) ;
+    void SetCleanFlag( int cleanFlag ) ;
 //to put in protected !!!
     void WriteLogFile(fileNameStruct fileName , std::vector< std::vector< float> > data ,
                       vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector<float> cumul , std::vector<float> average) ;
@@ -47,11 +48,12 @@ public:
     int run() ;
 
 private:
-    int Visualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
+    int FlagVisualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
     std::string InputFileName ;
     std::string OutputFileName ;
     std::string AttributeFileName ; // name of the attribute/mask file
     int FlagAttribute ; // 0 if there is a mask, 1 if there is no mask
     int FlagThreshold ;
+    int FlagClean ;
     float Threshold ;
 };

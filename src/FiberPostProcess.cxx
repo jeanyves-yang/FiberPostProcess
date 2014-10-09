@@ -41,6 +41,7 @@ int main( int argc , char* argv[] )
   FiberProcessing.SetAttributeFileName( attributeFileName ) ;
   FiberProcessing.SetThresholdFlag( thresholdFlag ) ;
   FiberProcessing.SetAttributeFlag( attributeFlag ) ;
+  FiberProcessing.SetCleanFlag( cleanFlag ) ;
   FiberProcessing.run() ;
   return EXIT_SUCCESS ;
 }
