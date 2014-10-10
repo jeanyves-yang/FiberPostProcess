@@ -18,14 +18,13 @@ add_executable(FiberProcessingTest vtkTest.cxx)
 target_link_libraries(FiberProcessingTest FiberPostProcessLib)
 ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTest1 COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
-  DATA{Data/CingulumNormalRun.vtk}
+  DATA{Data/LeftMotor.vtk}
   ${Output}
   ModuleEntryPoint
-  -i DATA{Data/Cingulum.vtk}
+  -i DATA{Data/LeftMotorInput.vtk}
   -o ${Output}
-  -m DATA{Data/inputT2-test3.nrrd}
-  -t 0.25
-  -v 1
+  -m DATA{Data/LeftMotorMask.nrrd}
+  --visualize
 )
 
 # Test with an empty mask
@@ -37,8 +36,7 @@ ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessEmptyMask COMMAN
   -i DATA{Data/Cingulum.vtk}
   -o ${Output}
   -m ${VoidMask}
-  -t 0.25
-  -v 1
+  --visualize
 )
 
 # Test with a mask equal to the input image
@@ -50,8 +48,7 @@ ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessIdentity COMMAND
   -i DATA{Data/Cingulum.vtk}
   -o ${Output}
   -m DATA{Data/dwi.nrrd}
-  -t 0.25
-  -v 1
+  --visualize
 )
 
 # CSV Tests
