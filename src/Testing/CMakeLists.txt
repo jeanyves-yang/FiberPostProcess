@@ -42,7 +42,7 @@ ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessEmptyMask COMMAN
 # Test with a mask equal to the input image
 ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessIdentity COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
-  DATA{Data/Cingulum.vtk}
+  DATA{Data/CingulumIdentity.vtk}
   ${Output}
   ModuleEntryPoint
   -i DATA{Data/Cingulum.vtk}

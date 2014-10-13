@@ -276,13 +276,6 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
 
 vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) // compute the fa on the tensors
 {
-   /* //vtkSmartPointer< vtkDoubleArray > processing::CreateCellData(std::vector< float > vecCellData , const char *fieldName )
-
-    for( int i = 0 ; i < vecCellData.size() ; i++ )
-    {
-        cellData->SetNumberOfComponents( 1 ) ;
-        cellData->SetName( fieldName ) ;
-        cellData->InsertNextValue( vecCellData[ i ] ) ;*/
      vtkSmartPointer< vtkPolyData > cleanedPolyData = polyData ;
      vtkSmartPointer< vtkDoubleArray > cellData = vtkSmartPointer< vtkDoubleArray >::New() ;
      cellData->SetNumberOfComponents( 1 ) ;
@@ -697,7 +690,7 @@ int processing::run()
         std::cout << "File could not be read" << std::endl ;
         return 1 ;
     }
-    vtkSmartPointer< vtkAbstractArray > tensors = fiberPolyData->GetPointData()->GetAbstractArray( "tensors" ) ;
+    vtkSmartPointer< vtkDataArray > tensors = fiberPolyData->GetPointData()->GetArray( "tensors" ) ;
     std::vector< std::vector< float > > vecPointData ;
     std::vector< float > cumul , average ;
     vtkSmartPointer< vtkDoubleArray > pointData ;
@@ -718,6 +711,7 @@ int processing::run()
     if( FlagVisualize )
     {
         visuFiber = CreateVisuFiber( fiberPolyData ) ;
+        visuFiber->GetPointData()->AddArray( tensors ) ;
     }
     if( extension.rfind( "vtk" ) != std::string::npos )
     {
