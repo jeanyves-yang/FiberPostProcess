@@ -415,6 +415,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
     float epsilon = 0.000001f ;
     vtkSmartPointer< vtkDoubleArray > newTensors = vtkSmartPointer< vtkDoubleArray >::New() ;
     newTensors->SetName( "tensors" ) ;
+    newTensors->SetNumberOfComponents( 9 ) ;
     vtkSmartPointer< vtkDataArray > tensors = polyData->GetPointData()->GetArray( "tensors" ) ;
     vtkSmartPointer< vtkPolyData > cropFiber = vtkSmartPointer< vtkPolyData >::New() ;
     vtkSmartPointer<vtkPoints> NewPoints = vtkSmartPointer<vtkPoints>::New() ;
@@ -454,7 +455,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         int compteur = 0 ;
         while( pointId < vecPointData[ fiberId ].size() - endOfFiber )
         {
-            newTensors->InsertNextTupleValue( tensors->GetTuple9( pointId ) ) ;
+            newTensors->InsertNextTuple( tensors->GetTuple9( pointId ) ) ;
             pointDataPerFiber.push_back( vecPointData[ fiberId ][ pointId ] ) ;
             NewPoints->InsertNextPoint( Points->GetPoint( Ids[ pointId ] ) ) ;
             NewLine->GetPointIds()->SetId( location , NewId ) ;
@@ -471,7 +472,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
     cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 0 ) ) ;
     cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 1 ) ) ;
     cropFiber->GetPointData()->AddArray( CreatePointData( pointData , "InsideMask" ) ) ;
-    cropFiber->GetPointData()->AddArray( newTensors ) ;
+    cropFiber->GetPointData()->SetTensors( newTensors ) ;
     return cropFiber ;
 }
 
@@ -738,12 +739,18 @@ int processing::run()
             cleanedFiberPolyData = CleanFiber( fiberPolyData , Threshold ) ;
         }
     }
-    cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
-    WriteFiberFile( visuFiber , fileName.visu ) ;
+    if( FlagAttribute == 0 )
+    {
+        cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
+    }
+    if( FlagVisualize )
+    {
+        WriteFiberFile( visuFiber , fileName.visu ) ;
+    }
     WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
-    //if( FlagAttribute == 0 )
-    //{
-     //   WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
-   // }
+    if( FlagAttribute == 0 )
+    {
+        WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
+    }
     return 0 ;
 }

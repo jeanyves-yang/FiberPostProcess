@@ -27,6 +27,14 @@ ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTest1 COMMAND $<
   --visualize
 )
 
+ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessCheckNan COMMAND $<TARGET_FILE:FiberProcessingTest>
+  --compare
+  DATA{Data/LeftMotorCheckNan.vtk}
+  ${Output}
+  ModuleEntryPoint
+  -i DATA{Data/LeftMotorInput.vtk}
+  -o ${Output}
+)
 # Test with an empty mask
 ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
