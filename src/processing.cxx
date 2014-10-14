@@ -293,7 +293,6 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
              nbTuples = polyData->GetPointData()->GetArray( i )->GetNumberOfTuples() ;
              for( int j = 0 ; j < nbTuples ; j++ )
              {
-
                  NanFiberId.push_back( -1 ) ;
                  double eigenValues[ 3 ] ;
                  double **eigenVectors = create_matrix< double > ( 3, 3 ) ;
@@ -316,7 +315,6 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
                      {
                          NanFiberId.push_back( j ) ;
                      }
-
                  }
                  free_matrix ( tensors ) ;
              }
@@ -455,7 +453,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         int compteur = 0 ;
         while( pointId < vecPointData[ fiberId ].size() - endOfFiber )
         {
-            newTensors->InsertNextTuple( tensors->GetTuple9( pointId ) ) ;
+            newTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( fiberId , pointId , polyData ) ) ) ;
             pointDataPerFiber.push_back( vecPointData[ fiberId ][ pointId ] ) ;
             NewPoints->InsertNextPoint( Points->GetPoint( Ids[ pointId ] ) ) ;
             NewLine->GetPointIds()->SetId( location , NewId ) ;
@@ -469,8 +467,10 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
     }
     cropFiber->SetPoints( NewPoints ) ;
     cropFiber->SetLines( NewLines ) ;
-    cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 0 ) ) ;
-    cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( 1 ) ) ;
+    for( int i = 0 ; i < polyData->GetCellData()->GetNumberOfArrays() ; i++ )
+    {
+        cropFiber->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( i ) ) ;
+    }
     cropFiber->GetPointData()->AddArray( CreatePointData( pointData , "InsideMask" ) ) ;
     cropFiber->GetPointData()->SetTensors( newTensors ) ;
     return cropFiber ;
@@ -605,6 +605,29 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     newPolyData->SetLines( newLines ) ;
     return newPolyData ;
 
+}
+
+int processing::GetPointId( int fiberId, int pointId , vtkSmartPointer< vtkPolyData > polyData )
+{
+    int finalPointId = 0 ;
+    int nbFiber = polyData->GetNumberOfLines() ;
+    int find = 0 ;
+    for( int i = 0 ; i < nbFiber ; i++ )
+    {
+        int nbPoints = polyData->GetCell( i )->GetNumberOfPoints() ;
+        for( int j = 0 ; j < nbPoints ; j++ )
+        {
+            if( fiberId == i && pointId == j )
+            {
+                find = 1 ;
+            }
+            if( find == 0 )
+            {
+                finalPointId ++ ;
+            }
+        }
+    }
+    return finalPointId ;
 }
 
 std::vector< std::string > processing::ThresholdPolyData(vtkSmartPointer< vtkPolyData > polyData )
