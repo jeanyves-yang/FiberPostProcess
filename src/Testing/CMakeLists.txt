@@ -7,8 +7,9 @@ list(APPEND ExternalData_URL_TEMPLATES
   )
 set(TEMP_DIR ${FiberPostProcess_BINARY_DIR}/Testing/Temporary )
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Data )
-set(BaselineEmptyMask ${SOURCE_DIR}/CingulumEmptyMask.vtk)
 set(Output ${TEMP_DIR}/output.vtk)
+set(Output1 ${TEMP_DIR}/output1.vtk)
+set(Output2 ${TEMP_DIR}/output2.vtk)
 set(OutputCleaned ${TEMP_DIR}/output-cleaned.vtk)
 set(VoidMask ${SOURCE_DIR}/inputnull.nrrd)
 
@@ -30,21 +31,20 @@ ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTest1 COMMAND $<
 ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessCheckNan COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
   DATA{Data/LeftMotorCheckNan.vtk}
-  ${Output}
+  ${Output1}
   ModuleEntryPoint
   -i DATA{Data/LeftMotorInput.vtk}
-  -o ${Output}
+  -o ${Output1}
 )
 # Test with an empty mask
 ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessEmptyMask COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare
-  ${BaselineEmptyMask}
-  ${OutputCleaned}
+  DATA{Data/CingulumEmptyMask.vtk}
+  ${Output2}
   ModuleEntryPoint
   -i DATA{Data/Cingulum.vtk}
-  -o ${Output}
+  -o ${Output2}
   -m ${VoidMask}
-  --visualize
 )
 
 # Test with a mask equal to the input image
