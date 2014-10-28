@@ -25,7 +25,7 @@ public:
     void SetCleanFlag( int cleanFlag ) ;
 //to put in protected !!!
     void WriteLogFile(fileNameStruct fileName , std::vector< std::vector< float> > data ,
-                      vtkSmartPointer< vtkPolyData > cleanedFiberFile , std::vector<float> cumul , std::vector<float> average) ;
+                      vtkSmartPointer< vtkPolyData > fiberFile , std::vector<float> cumul , std::vector<float> average ) ;
     void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     int FindMaxNbOfPoints( vtkSmartPointer< vtkPolyData > polyData ) ;
     template< class T>
