@@ -160,30 +160,6 @@ void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector
     csvFile.write( logFileName ) ;
 }
 
-void processing::FindAllData( vtkSmartPointer< vtkPolyData > polyData )
-{
-    polyData->GetLines()->InitTraversal() ;
-    std::cout << "Normals: " << polyData->GetPointData()->GetNormals() << std::endl ;
-    vtkIdType numberOfPointArrays = polyData->GetPointData()->GetNumberOfArrays() ;
-    std::cout << "Lines: " << polyData->GetNumberOfLines() << std::endl ;
-    vtkSmartPointer< vtkIdList > idList = vtkSmartPointer< vtkIdList >::New() ;
-    std::cout << "Cells: " << polyData->GetNumberOfCells() << std::endl ;
-    std::cout << "Points: " << polyData->GetNumberOfPoints() << std::endl ;
-    std::cout << "Polys: " << polyData->GetNumberOfPolys() << std::endl ;
-    std::cout << "Strips: " << polyData->GetNumberOfStrips() << std::endl ;
-    std::cout << "Verts: " << polyData->GetNumberOfVerts() << std::endl ;
-    int i = 1 ;
-    while( polyData->GetLines()->GetNextCell( idList ) )
-    {
-        std::cout<< "Line " << i << ": " << idList->GetNumberOfIds() << " points" <<std::endl ;
-        i++ ;
-        for( vtkIdType pointId = 0 ; pointId < idList->GetNumberOfIds() ; pointId++ )
-        {
-            /*std::cout <<idList->GetId( pointId ) << " " ;*/
-        }
-    }
-}
-
 int processing::FindMaxNbOfPoints( vtkSmartPointer< vtkPolyData > polyData )
 {
     polyData->GetLines()->InitTraversal() ;

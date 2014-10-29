@@ -23,10 +23,11 @@ public:
     void SetThresholdFlag( int thresholdFlag ) ;
     void SetAttributeFlag( int attributeFlag ) ;
     void SetCleanFlag( int cleanFlag ) ;
-//to put in protected !!!
+    int run() ;
+
+protected:
     void WriteLogFile(fileNameStruct fileName , std::vector< std::vector< float> > data ,
                       vtkSmartPointer< vtkPolyData > fiberFile , std::vector<float> cumul , std::vector<float> average ) ;
-    void FindAllData(vtkSmartPointer< vtkPolyData > polydata ) ;
     int FindMaxNbOfPoints( vtkSmartPointer< vtkPolyData > polyData ) ;
     template< class T>
     vtkSmartPointer< vtkPolyData > ReadFiberFile( T reader , std::string fiberFile ) ;
@@ -46,7 +47,6 @@ public:
     vtkSmartPointer< vtkPolyData > CleanFiber( vtkSmartPointer< vtkPolyData > polyData , float threshold ) ;
     vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > polyData ) ;
-    int run() ;
 
 private:
     int FlagVisualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
