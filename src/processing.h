@@ -20,9 +20,12 @@ public:
     void SetOutputFileName( std::string outputFiberFileName ) ;
     void SetVisualisation( int visualisationFlag ) ;
     void SetAttributeFileName( std::string attributeFileName ) ;
+    void SetThreshold( float threshold ) ;
     void SetThresholdFlag( int thresholdFlag ) ;
     void SetAttributeFlag( int attributeFlag ) ;
-    void SetCleanFlag( int cleanFlag ) ;
+    void SetMaskFlag( int maskFlag ) ;
+    void SetCropFlag( int cropFlag ) ;
+    void SetThresholdMode( std::string thresholdMode ) ;
     int run() ;
 
 protected:
@@ -33,7 +36,7 @@ protected:
     vtkSmartPointer< vtkPolyData > ReadFiberFile( T reader , std::string fiberFile ) ;
     void WriteFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
     int GetPointId( int fiberId, int pointId , vtkSmartPointer< vtkPolyData > polyData ) ;
-    vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;//change name
+    std::vector<int> CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;//change name
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) ;
     std::vector< std::vector< float > > convertDataToVector( vtkSmartPointer< vtkDataArray > array ) ;
     std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData  ) ;
@@ -55,6 +58,8 @@ private:
     std::string AttributeFileName ; // name of the attribute/mask file
     int FlagAttribute ; // 0 if there is a mask, 1 if there is no mask
     int FlagThreshold ;
-    int FlagClean ;
+    int FlagMask ;
+    int FlagCrop ;
     float Threshold ;
+    std::string ThresholdMode ;
 };

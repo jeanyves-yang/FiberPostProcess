@@ -82,7 +82,10 @@ void processing::SetAttributeFileName( std::string attributeFileName )
 {
     AttributeFileName = attributeFileName ;
 }
-
+void processing::SetThreshold( float threshold )
+{
+    Threshold = threshold ;
+}
 void processing::processing::SetThresholdFlag( int thresholdFlag )
 {
     FlagThreshold = thresholdFlag ;
@@ -93,11 +96,19 @@ void processing::SetAttributeFlag( int attributeFlag )
     FlagAttribute = attributeFlag ;
 }
 
-void processing::SetCleanFlag( int cleanFlag )
+void processing::SetMaskFlag( int maskFlag )
 {
-    FlagClean = cleanFlag ;
+    FlagMask = maskFlag ;
 }
 
+void processing::SetCropFlag( int cropFlag )
+{
+    FlagCrop = cropFlag ;
+}
+void processing::SetThresholdMode( std::string thresholdMode )
+{
+    ThresholdMode = thresholdMode ;
+}
 void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector< std::vector< float> > vecPointData ,
                                vtkSmartPointer< vtkPolyData > fiberFile , std::vector< float > cumul , std::vector< float > average )
 {
@@ -204,45 +215,27 @@ void processing::WriteFiberFile( vtkSmartPointer< vtkPolyData > polyData , std::
     }
 }
 
-vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData )
+/*std::vector< int > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData )
 {
-    std::vector< std::vector< float > > pointData ;
-    vtkPoints* points = polyData->GetPoints() ;
+    std::vector< int > cellData ;
     vtkCellArray* lines = polyData->GetLines() ;
     vtkIdType* ids ;
     vtkIdType numberOfPoints ;
-    vtkIdType newId = 0 ;
     lines->InitTraversal() ;
-    vtkSmartPointer< vtkPolyData > newPolyData = vtkSmartPointer< vtkPolyData >::New() ;
-    vtkSmartPointer<vtkPoints> newPoints = vtkSmartPointer<vtkPoints>::New() ;
-    vtkSmartPointer<vtkCellArray> newLines = vtkSmartPointer<vtkCellArray>::New() ;
     for( int fiberId = 0 ; lines->GetNextCell( numberOfPoints , ids ) ; fiberId++ )
     {
         int NanFiber = 0 ;
-        vtkSmartPointer< vtkPolyLine > newLine = vtkSmartPointer< vtkPolyLine >::New() ;
-        newLine->GetPointIds()->SetNumberOfIds( numberOfPoints ) ;
         for( int pointId = 0 ; pointId < numberOfPoints ; pointId ++ )
         {
             if( std::isnan( vecPointData[ fiberId ][ pointId ] ) != 0 )
             {
                 NanFiber = 1 ;
             }
-            else
-            {
-                newPoints->InsertNextPoint( points->GetPoint( ids[ pointId ] ) ) ;
-                newLine->GetPointIds()->SetId( pointId , newId ) ;
-                newId++ ;
-            }
         }
-        if(NanFiber == 0)
-        {
-            newLines->InsertNextCell( newLine ) ;
-        }
+        cellData.push_back( NanFiber ) ;
     }
-    newPolyData->SetPoints( newPoints ) ;
-    newPolyData->SetLines( newLines ) ;
-    return newPolyData ;
-}
+    return cellData ;
+}*/
 
 vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) // compute the fa on the tensors
 {
@@ -250,8 +243,6 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
      vtkSmartPointer< vtkDoubleArray > cellData = vtkSmartPointer< vtkDoubleArray >::New() ;
      cellData->SetNumberOfComponents( 1 ) ;
      cellData->SetName( "NaNCases" ) ;
-     int nanTensorFlag = 0 ;
-     std::vector< std::vector< std::string > > dataField ;
      int nbArrays = polyData->GetPointData()->GetNumberOfArrays() ;
      std::vector< int > NanFiberId ;
      for( int i = 0 ; i < nbArrays ; i++ )
@@ -289,9 +280,9 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
                  free_matrix ( tensors ) ;
              }
          }
-         vtkSmartPointer< vtkDataArray > dataArray = polyData->GetPointData()->GetArray( i ) ;
+        /* vtkSmartPointer< vtkDataArray > dataArray = polyData->GetPointData()->GetArray( i ) ;
          std::vector< std::vector< float > > dataVector = convertDataToVector( dataArray ) ;
-         CheckNaN( cleanedPolyData , dataVector ) ;
+         CheckNaN( cleanedPolyData , dataVector ) ;*/
      }
      vtkCellArray* lines = polyData->GetLines() ;
      vtkIdType numberOfPoints ;
@@ -549,31 +540,61 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     vtkIdType numberOfPoints ;
     int newId = 0 ;
     vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
-    fiberReadArray = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "CumulativeValue" ) ) ;
+    fiberReadArray = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "AverageValue" ) ) ;
     vtkSmartPointer< vtkDoubleArray > cellData = vtkSmartPointer< vtkDoubleArray >::New() ;
+    vtkSmartPointer< vtkDoubleArray > removeFiber = vtkSmartPointer< vtkDoubleArray >::New() ;
+    removeFiber->SetName( "removeFiber" ) ;
     cellData = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "NanCases" ) ) ;
     lines->InitTraversal() ;
     for( int i = 0 ; lines->GetNextCell( numberOfPoints , ids ) ; i++ )
     {
         vtkSmartPointer< vtkPolyLine > newLine = vtkSmartPointer< vtkPolyLine >::New() ;
         newLine->GetPointIds()->SetNumberOfIds( numberOfPoints ) ;
-        if( fiberReadArray->GetValue( i ) <= threshold && fiberReadArray->GetValue( i ) == 0 )
+        if( ThresholdMode == "above" )
         {
-            for( int j = 0 ; j < numberOfPoints ; j ++ )
+            if( fiberReadArray->GetValue( i ) >= threshold /*&& cellData->GetValue( i ) == 0*/ )
             {
-                newPoints->InsertNextPoint( points->GetPoint( ids[j] ) ) ;
-                newLine->GetPointIds()->SetId( j , newId ) ;
-                newId++ ;
+                removeFiber->InsertNextValue( 1 ) ;
             }
-            newLines->InsertNextCell( newLine ) ;
+            else
+            {
+                for( int j = 0 ; j < numberOfPoints ; j ++ )
+                {
+                    newPoints->InsertNextPoint( points->GetPoint( ids[j] ) ) ;
+                    newLine->GetPointIds()->SetId( j , newId ) ;
+                    newId++ ;
+                }
+                newLines->InsertNextCell( newLine ) ;
+                removeFiber->InsertNextValue( 0 ) ;
+            }
         }
         else
         {
+            if( fiberReadArray->GetValue( i ) <= threshold /*&& cellData->GetValue( i ) == 0*/ )
+            {
+                removeFiber->InsertNextValue( 1 ) ;
+            }
+            else
+            {
+                for( int j = 0 ; j < numberOfPoints ; j ++ )
+                {
+                    newPoints->InsertNextPoint( points->GetPoint( ids[j] ) ) ;
+                    newLine->GetPointIds()->SetId( j , newId ) ;
+                    newId++ ;
+                }
+                newLines->InsertNextCell( newLine ) ;
+                removeFiber->InsertNextValue( 0 ) ;
+            }
         }
     }
     newPolyData->SetPoints( newPoints ) ;
     newPolyData->SetLines( newLines ) ;
-    return newPolyData ;
+    polyData->GetCellData()->AddArray( removeFiber ) ;
+    if( FlagMask == true )
+    {
+        return newPolyData ;
+    }
+    return polyData ;
 }
 
 int processing::GetPointId( int fiberId, int pointId , vtkSmartPointer< vtkPolyData > polyData )
@@ -700,11 +721,10 @@ int processing::run()
         pointData =  CreatePointData( vecPointData , "InsideMask" ) ;
         fiberPolyData->GetPointData()->AddArray( pointData ) ;
     }
-    vtkSmartPointer< vtkPolyData > visuFiber = vtkSmartPointer< vtkPolyData >::New() ;
+    cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
     if( FlagVisualize )
     {
-        visuFiber = CreateVisuFiber( fiberPolyData ) ;
-        visuFiber->GetPointData()->AddArray( tensors ) ;
+        WriteFiberFile( cleanedFiberPolyData , fileName.visu ) ;
     }
     if( extension.rfind( "vtk" ) != std::string::npos )
     {
@@ -719,20 +739,19 @@ int processing::run()
         std::cout << "File could not be read" << std::endl ;
         return 1 ;
     }
-    cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
-    if( FlagThreshold ==true )
+
+    if( FlagThreshold ==true && FlagMask == true )
     {
         cleanedFiberPolyData = CleanFiber( fiberPolyData , Threshold ) ;
     }
-    if( FlagAttribute == 0 )
+    if( FlagAttribute == true )
     {
-        cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
-        WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
-    }
-    if( FlagVisualize )
-    {
-        WriteFiberFile( visuFiber , fileName.visu ) ;
-    }
+        if( FlagCrop ==true )
+        {
+            cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
+        }
+
+    } WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
     WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
     return 0 ;
 }

@@ -39,9 +39,12 @@ int main( int argc , char* argv[] )
   FiberProcessing.SetOutputFileName( outputFiberFileName ) ;
   FiberProcessing.SetVisualisation( visualisationFlag ) ;
   FiberProcessing.SetAttributeFileName( attributeFileName ) ;
+  FiberProcessing.SetThreshold( threshold ) ;
   FiberProcessing.SetThresholdFlag( thresholdFlag ) ;
   FiberProcessing.SetAttributeFlag( attributeFlag ) ;
-  FiberProcessing.SetCleanFlag( cleanFlag ) ;
+  FiberProcessing.SetMaskFlag( mask ) ;
+  FiberProcessing.SetCropFlag( crop ) ;
+  FiberProcessing.SetThresholdMode ( thresholdMode ) ;
   FiberProcessing.run() ;
   return EXIT_SUCCESS ;
 }
