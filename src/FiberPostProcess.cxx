@@ -23,7 +23,7 @@ int main( int argc , char* argv[] )
   PARSE_ARGS ;
   bool attributeFlag = false ;
   bool thresholdFlag = false ;
-  if( attributeFileName.empty() )
+  if( !attributeFileName.empty() )
   {
       attributeFlag = true ;
   }
