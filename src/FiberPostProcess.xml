@@ -3,7 +3,7 @@
    <category>Diffusion.FiberAnalysis</category>
    <title>Fiber Post Processing</title>
    <description>Removes fibers outside of a mask</description>
-   <version>0.9.1</version>
+   <version>0.9.2</version>
    <contributor>Jean-Yves Yang</contributor>
    <parameters>
 
@@ -61,7 +61,7 @@
            <longflag>mask</longflag>
            <label>Enables the masking of the fiber bundle.</label>
            <channel>input</channel>
-           <description>If toggled, the output file is a fiber bundle masked, fibers are excluded depending on the threshold. If not, the fiber file contains the same fiber bundle than the input, with appended cell datas and point datas.</description>
+           <description>If toggled, the mask is applied to the fiber bundle. By default the output will contains additional cell datas but fibers will not be removed. Use the --clean flag to remove the fibers that are supposed to be excluded.</description>
         </boolean>
 
         <boolean>
@@ -70,6 +70,14 @@
            <label>Output file contains the fiber bundle cropped if a mask has been given as an input.</label>
            <channel>input</channel>
            <description>If toggled, the output file is a fiber bundle cropped. If not, the fiber file contains the same fiber bundle than the input, with appended cell datas and point datas.</description>
+        </boolean>
+
+        <boolean>
+           <name>clean</name>
+           <longflag>clean</longflag>
+           <label>Enables the cleaning of the fiber bundle.</label>
+           <channel>input</channel>
+           <description>If this flag and the mask flag are toggled, the output bundle will be a fiber bundle masked, fibers are excluded depending on the threshold. </description>
         </boolean>
 
         <boolean>

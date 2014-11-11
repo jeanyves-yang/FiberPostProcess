@@ -25,6 +25,7 @@ public:
     void SetAttributeFlag( int attributeFlag ) ;
     void SetMaskFlag( int maskFlag ) ;
     void SetCropFlag( int cropFlag ) ;
+    void SetCleanFlag( int cleanFlag ) ;
     void SetThresholdMode( std::string thresholdMode ) ;
     int run() ;
 
@@ -40,7 +41,7 @@ protected:
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) ;
     std::vector< std::vector< float > > convertDataToVector( vtkSmartPointer< vtkDataArray > array ) ;
     std::vector< std::vector< float > > ApplyMaskToFiber( vtkSmartPointer< vtkPolyData > PolyData  ) ;
-    vtkSmartPointer< vtkPolyData > CropFiber(vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;
+    vtkSmartPointer< vtkPolyData > CropFiber(vtkSmartPointer< vtkPolyData > polyData , std::vector<std::vector<float> > &vecPointData ) ;
     void deletePoint( vtkSmartPointer< vtkPoints > fiberPoints , int pointId ) ;
     std::vector< std::string > ThresholdPolyData( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkDoubleArray > CreatePointData( std::vector< std::vector< float> > vecPointData , const char* fieldName ) ;
@@ -60,6 +61,7 @@ private:
     int FlagThreshold ;
     int FlagMask ;
     int FlagCrop ;
+    int FlagClean ;
     float Threshold ;
     std::string ThresholdMode ;
 };

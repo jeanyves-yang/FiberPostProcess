@@ -105,6 +105,10 @@ void processing::SetCropFlag( int cropFlag )
 {
     FlagCrop = cropFlag ;
 }
+void processing::SetCleanFlag( int cleanFlag )
+{
+    FlagClean = cleanFlag ;
+}
 void processing::SetThresholdMode( std::string thresholdMode )
 {
     ThresholdMode = thresholdMode ;
@@ -369,7 +373,7 @@ std::vector< std::vector< float > > processing::ApplyMaskToFiber(vtkSmartPointer
     return pointData ;
 }
 
-vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData )
+vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > & vecPointData )
 {
     float epsilon = 0.000001f ;
     vtkSmartPointer< vtkDoubleArray > newTensors = vtkSmartPointer< vtkDoubleArray >::New() ;
@@ -569,7 +573,7 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
             {
                 for( int j = 0 ; j < nbPoints ; j ++ )
                 {
-                    newPoints->InsertNextPoint( points->GetPoint( ids[j] ) ) ;
+                    newPoints->InsertNextPoint( points->GetPoint( polyData->GetCell( i )->GetPointId( j ) ) ) ;
                     newLine->GetPointIds()->SetId( j , newId ) ;
                     newId++ ;
                 }
@@ -600,7 +604,7 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     newPolyData->SetLines( newLines ) ;
     newPolyData->GetPointData()->SetTensors( newTensors ) ;
     polyData->GetCellData()->AddArray( removeFiber ) ;
-    if( FlagMask == true )
+    if( FlagClean == true )
     {
         return newPolyData ;
     }
@@ -609,25 +613,7 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
 
 int processing::GetPointId( int fiberId, int pointId , vtkSmartPointer< vtkPolyData > polyData )
 {
-    int finalPointId = 0 ;
-    int nbFiber = polyData->GetNumberOfLines() ;
-    int find = 0 ;
-    for( int i = 0 ; i < nbFiber ; i++ )
-    {
-        int nbPoints = polyData->GetCell( i )->GetNumberOfPoints() ;
-        for( int j = 0 ; j < nbPoints ; j++ )
-        {
-            if( fiberId == i && pointId == j )
-            {
-                find = 1 ;
-            }
-            if( find == 0 )
-            {
-                finalPointId ++ ;
-            }
-        }
-    }
-    return finalPointId ;
+    return polyData->GetCell( fiberId )->GetPointId( pointId ) ;
 }
 
 std::vector< std::string > processing::ThresholdPolyData(vtkSmartPointer< vtkPolyData > polyData )
@@ -714,7 +700,6 @@ int processing::run()
         std::cout << "File could not be read" << std::endl ;
         return 1 ;
     }
-    vtkSmartPointer< vtkDataArray > tensors = fiberPolyData->GetPointData()->GetArray( "tensors" ) ;
     std::vector< std::vector< float > > vecPointData ;
     std::vector< float > cumul , average ;
     vtkSmartPointer< vtkDoubleArray > pointData ;
@@ -732,7 +717,6 @@ int processing::run()
         fiberPolyData->GetPointData()->AddArray( pointData ) ;
     }
     cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
-
     if( extension.rfind( "vtk" ) != std::string::npos )
     {
         fileName.visu =  ChangeEndOfFileName( OutputFileName , "-visu.vtk" ) ;
@@ -742,7 +726,7 @@ int processing::run()
         fileName.visu = ChangeEndOfFileName( OutputFileName , "-visu.vtp" ) ;
     }
     if( FlagVisualize )
-    {std::cout<<"visualize"<<std::endl;
+    {
         WriteFiberFile( cleanedFiberPolyData , fileName.visu ) ;
     }
     else
@@ -753,15 +737,14 @@ int processing::run()
     if( FlagAttribute == true )
     {
         if( FlagCrop == true )
-        {std::cout<<"crop"<<std::endl;
+        {
             cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
         }
     }
     if( FlagThreshold ==true && FlagMask == true )
-    {std::cout<<"clean"<<std::endl;
+    {
         cleanedFiberPolyData = CleanFiber( cleanedFiberPolyData , Threshold ) ;
     }
-
     WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
     WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
     return 0 ;

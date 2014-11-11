@@ -44,6 +44,7 @@ int main( int argc , char* argv[] )
   FiberProcessing.SetAttributeFlag( attributeFlag ) ;
   FiberProcessing.SetMaskFlag( mask ) ;
   FiberProcessing.SetCropFlag( crop ) ;
+  FiberProcessing.SetCleanFlag( clean ) ;
   FiberProcessing.SetThresholdMode ( thresholdMode ) ;
   FiberProcessing.run() ;
   return EXIT_SUCCESS ;
