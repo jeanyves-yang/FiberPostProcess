@@ -379,7 +379,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
     vtkSmartPointer< vtkDoubleArray > newTensors = vtkSmartPointer< vtkDoubleArray >::New() ;
     newTensors->SetName( "tensors" ) ;
     newTensors->SetNumberOfComponents( 9 ) ;
-    vtkSmartPointer< vtkDataArray > tensors = polyData->GetPointData()->GetArray( "tensors" ) ;
+    vtkSmartPointer< vtkDataArray > tensors = polyData->GetPointData()->GetTensors() ;
     vtkSmartPointer< vtkPolyData > cropFiber = vtkSmartPointer< vtkPolyData >::New() ;
     vtkSmartPointer<vtkPoints> NewPoints = vtkSmartPointer<vtkPoints>::New() ;
     std::vector< std::vector< float > > pointData ;
@@ -418,6 +418,7 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         int compteur = 0 ;
         while( pointId < vecPointData[ fiberId ].size() - endOfFiber )
         {
+            std::cout<< GetPointId( fiberId , pointId , polyData ) ;
             newTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( fiberId , pointId , polyData ) ) ) ;
             pointDataPerFiber.push_back( vecPointData[ fiberId ][ pointId ] ) ;
             NewPoints->InsertNextPoint( Points->GetPoint( Ids[ pointId ] ) ) ;
@@ -729,16 +730,15 @@ int processing::run()
     {
         WriteFiberFile( cleanedFiberPolyData , fileName.visu ) ;
     }
-    else
-    {
-        std::cout << "File could not be read" << std::endl ;
-        return 1 ;
-    }
     if( FlagAttribute == true )
     {
         if( FlagCrop == true )
         {
             cleanedFiberPolyData = CropFiber( cleanedFiberPolyData , vecPointData ) ;
+        }
+        else
+        {
+
         }
     }
     if( FlagThreshold ==true && FlagMask == true )
