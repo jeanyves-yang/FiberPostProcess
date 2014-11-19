@@ -35,7 +35,23 @@ int main( int argc , char* argv[] )
       }
   }
   processing FiberProcessing ;
-  FiberProcessing.SetInputFileName( inputFiberFileName ) ;
+  if( inp)
+  if( attributeFlag == false )
+  {
+      if( crop == true || clean == true || mask == true )
+      {
+          std::cerr << "No attribute file detected. --crop, --clean, --mask requires an attribute file to be used. Please use --attributeFile or -m to input an attribute file or consult the help for more details." << std::endl ;
+          return EXIT_FAILURE ;
+      }
+  }
+  else if( mask == false )
+  {
+          if( clean == true )
+          {
+              std::cerr << "--clean requires --mask to be used. Please consult the help for more details." << std::endl ;
+              return EXIT_FAILURE ;
+          }
+  }
   FiberProcessing.SetOutputFileName( outputFiberFileName ) ;
   FiberProcessing.SetVisualisation( visualisationFlag ) ;
   FiberProcessing.SetAttributeFileName( attributeFileName ) ;
