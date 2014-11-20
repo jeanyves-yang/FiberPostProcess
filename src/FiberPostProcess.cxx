@@ -35,7 +35,6 @@ int main( int argc , char* argv[] )
       }
   }
   processing FiberProcessing ;
-  if( inp)
   if( attributeFlag == false )
   {
       if( crop == true || clean == true || mask == true )
@@ -52,6 +51,7 @@ int main( int argc , char* argv[] )
               return EXIT_FAILURE ;
           }
   }
+  FiberProcessing.SetInputFileName( inputFiberFileName ) ;
   FiberProcessing.SetOutputFileName( outputFiberFileName ) ;
   FiberProcessing.SetVisualisation( visualisationFlag ) ;
   FiberProcessing.SetAttributeFileName( attributeFileName ) ;

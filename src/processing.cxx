@@ -418,7 +418,6 @@ vtkSmartPointer< vtkPolyData > processing::CropFiber( vtkSmartPointer< vtkPolyDa
         int compteur = 0 ;
         while( pointId < vecPointData[ fiberId ].size() - endOfFiber )
         {
-            std::cout<< GetPointId( fiberId , pointId , polyData ) ;
             newTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( fiberId , pointId , polyData ) ) ) ;
             pointDataPerFiber.push_back( vecPointData[ fiberId ][ pointId ] ) ;
             NewPoints->InsertNextPoint( Points->GetPoint( Ids[ pointId ] ) ) ;
