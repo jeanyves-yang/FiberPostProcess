@@ -12,7 +12,7 @@
 
         <file>
            <name>inputFiberFileName</name>
-           <longflag>inputFiberFileName</longflag>
+           <longflag>inputFiberFile</longflag>
            <label>Input Fiber File Name</label>
            <channel>input</channel>
            <flag>i</flag>
@@ -21,7 +21,7 @@
 
         <geometry type="fiberbundle">
            <name>outputFiberFileName</name>
-           <longflag>outputFiber</longflag>
+           <longflag>outputFiberFile</longflag>
            <label>Output Fiber File Name</label>
            <channel>output</channel>
            <flag>o</flag>
