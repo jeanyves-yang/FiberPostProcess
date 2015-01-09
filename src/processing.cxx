@@ -113,6 +113,10 @@ void processing::SetThresholdMode( std::string thresholdMode )
 {
     ThresholdMode = thresholdMode ;
 }
+void processing::SetNoNanFlag( int noNanFlag )
+{
+    FlagNoNan = noNanFlag ;
+}
 void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector< std::vector< float> > vecPointData ,
                                vtkSmartPointer< vtkPolyData > fiberFile , std::vector< float > cumul , std::vector< float > average )
 {
@@ -321,6 +325,8 @@ vtkSmartPointer< vtkPolyData > processing::CheckNaN( vtkSmartPointer< vtkPolyDat
     cleanedPolyData->GetCellData()->AddArray( cellData ) ;
     return cleanedPolyData ;
 }
+
+
 
 std::vector< std::vector< float > > processing::convertDataToVector(vtkSmartPointer<vtkDataArray> array )
 {
@@ -684,7 +690,49 @@ vtkSmartPointer< vtkPolyData > processing::CreateVisuFiber(vtkSmartPointer< vtkP
     NewPolyData->GetCellData()->AddArray( polyData->GetCellData()->GetAbstractArray( "AverageValue") ) ;
     NewPolyData->GetPointData()->AddArray( polyData->GetPointData()->GetAbstractArray( "InsideMask" ) ) ;
     return NewPolyData ;
+}
 
+vtkSmartPointer<vtkPolyData> processing::RemoveNanFibers( vtkSmartPointer< vtkPolyData > polyData )
+{
+    vtkSmartPointer<vtkPolyData> FinalPolyData=vtkSmartPointer<vtkPolyData>::New();
+    vtkSmartPointer<vtkFloatArray> NewTensors=vtkSmartPointer<vtkFloatArray>::New();
+    vtkSmartPointer<vtkPoints> NewPoints=vtkSmartPointer<vtkPoints>::New();
+    vtkSmartPointer<vtkCellArray> NewLines=vtkSmartPointer<vtkCellArray>::New();
+    NewTensors->SetNumberOfComponents(9);
+    vtkDataArray* Tensors=polyData->GetPointData()->GetTensors();
+    vtkPoints* Points=polyData->GetPoints();
+    vtkCellArray* Lines=polyData->GetLines();
+    vtkIdType* Ids;
+    vtkIdType NumberOfPoints;
+    int NewId=0;
+    Lines->InitTraversal();
+    vtkSmartPointer< vtkDoubleArray > fiberReadArray = vtkSmartPointer< vtkDoubleArray >::New() ;
+    fiberReadArray = vtkDoubleArray::SafeDownCast( polyData->GetCellData()->GetArray( "NaNCases" ) ) ;
+    for( int i=0; Lines->GetNextCell( NumberOfPoints , Ids ) ; i++ )
+    {
+        vtkSmartPointer<vtkPolyLine> NewLine=vtkSmartPointer<vtkPolyLine>::New() ;
+        NewLine->GetPointIds()->SetNumberOfIds( NumberOfPoints ) ;
+        if( !fiberReadArray->GetValue( i ) )
+        {
+            for( int j=0; j < NumberOfPoints ; j++ )
+            {
+                NewPoints->InsertNextPoint( Points->GetPoint(Ids[ j ] ) ) ;
+                NewLine->GetPointIds()->SetId( j , NewId ) ;
+                NewId++ ;
+                double tensorValue[9] ;
+                for( int k = 0 ; k < 9 ; k++ )
+                {
+                    tensorValue[ k ] = Tensors->GetComponent( Ids[ j ] , k ) ;
+                }
+                NewTensors->InsertNextTuple(tensorValue);
+            }
+            NewLines->InsertNextCell(NewLine);
+        }
+    }
+    FinalPolyData->SetPoints(NewPoints);
+    FinalPolyData->GetPointData()->SetTensors(NewTensors);
+    FinalPolyData->SetLines(NewLines);
+    return FinalPolyData;
 }
 
 int processing::run()
@@ -716,20 +764,25 @@ int processing::run()
     std::vector< std::vector< float > > vecPointData ;
     std::vector< float > cumul , average ;
     vtkSmartPointer< vtkDoubleArray > pointData ;
+    cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
+    if( FlagNoNan == true )
+    {
+        cleanedFiberPolyData = RemoveNanFibers( cleanedFiberPolyData ) ;
+    }
     if( FlagAttribute == true )
     {
-        vecPointData = ApplyMaskToFiber( fiberPolyData ) ;
+        vecPointData = ApplyMaskToFiber( cleanedFiberPolyData ) ;
         cumul = CumulValuePerFiber( vecPointData ) ;
         average = AverageValuePerFiber( vecPointData ) ;
         vtkSmartPointer< vtkDoubleArray > cellData , cellData2 ;
         cellData =  CreateCellData( cumul , "CumulativeValue" ) ;
         cellData2 = CreateCellData( average , "AverageValue" ) ;
-        fiberPolyData->GetCellData()->AddArray( cellData ) ;
-        fiberPolyData->GetCellData()->AddArray( cellData2 ) ;
+        cleanedFiberPolyData->GetCellData()->AddArray( cellData ) ;
+        cleanedFiberPolyData->GetCellData()->AddArray( cellData2 ) ;
         pointData =  CreatePointData( vecPointData , "InsideMask" ) ;
-        fiberPolyData->GetPointData()->AddArray( pointData ) ;
+        cleanedFiberPolyData->GetPointData()->AddArray( pointData ) ;
     }
-    cleanedFiberPolyData = CheckNaN( fiberPolyData ) ;
+    cleanedFiberPolyData = CheckNaN( cleanedFiberPolyData ) ;
     if( extension.rfind( "vtk" ) != std::string::npos )
     {
         fileName.visu =  ChangeEndOfFileName( OutputFileName , "-visu.vtk" ) ;

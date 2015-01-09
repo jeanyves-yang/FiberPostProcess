@@ -3,7 +3,7 @@
    <category>Diffusion.FiberAnalysis</category>
    <title>Fiber Post Processing</title>
    <description>Removes fibers outside of a mask</description>
-   <version>0.9.2</version>
+   <version>1.0.0</version>
    <contributor>Jean-Yves Yang</contributor>
    <parameters>
 
@@ -78,6 +78,14 @@
            <label>Enables the cleaning of the fiber bundle.</label>
            <channel>input</channel>
            <description>If this flag and the mask flag are toggled, the output bundle will be a fiber bundle masked, fibers are excluded depending on the threshold. </description>
+        </boolean>
+
+        <boolean>
+           <name>noNan</name>
+           <longflag>noNan</longflag>
+           <label>The output fiber file will not contain fibers that can have Nan values.</label>
+           <channel>input</channel>
+           <description>If toggled, remove any fibers that can contain Nan values. </description>
         </boolean>
 
         <boolean>

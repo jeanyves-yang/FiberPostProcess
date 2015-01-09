@@ -62,6 +62,7 @@ int main( int argc , char* argv[] )
   FiberProcessing.SetCropFlag( crop ) ;
   FiberProcessing.SetCleanFlag( clean ) ;
   FiberProcessing.SetThresholdMode ( thresholdMode ) ;
+  FiberProcessing.SetNoNanFlag( noNan ) ;
   FiberProcessing.run() ;
   return EXIT_SUCCESS ;
 }

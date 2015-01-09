@@ -26,6 +26,7 @@ public:
     void SetMaskFlag( int maskFlag ) ;
     void SetCropFlag( int cropFlag ) ;
     void SetCleanFlag( int cleanFlag ) ;
+    void SetNoNanFlag( int noNanFlag ) ;
     void SetThresholdMode( std::string thresholdMode ) ;
     int run() ;
 
@@ -51,6 +52,7 @@ protected:
     vtkSmartPointer< vtkPolyData > CleanFiber( vtkSmartPointer< vtkPolyData > polyData , float threshold ) ;
     vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > polyData ) ;
+    vtkSmartPointer<vtkPolyData> RemoveNanFibers( vtkSmartPointer< vtkPolyData > polyData ) ;
 
 private:
     int FlagVisualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
@@ -62,6 +64,7 @@ private:
     int FlagMask ;
     int FlagCrop ;
     int FlagClean ;
+    int FlagNoNan ;
     float Threshold ;
     std::string ThresholdMode ;
 };
