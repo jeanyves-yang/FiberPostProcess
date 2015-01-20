@@ -25,6 +25,18 @@ ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTest0000 COMMAND
   -i DATA{Data/LeftMotorInput.vtk}
   -o ${Output}
 )
+
+# Attribute at 0 Mask at 0 Crop at 0 Clean at 0 -> checkNan + noNan (remove fibers containing NaN values)
+ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTestNoNan COMMAND $<TARGET_FILE:FiberProcessingTest>
+  --compare
+  DATA{Data/CorpusCallosumOccipitalSpleniumNoNan.vtk}
+  ${Output}
+  ModuleEntryPoint
+  -i DATA{Data/CorpusCallosumOccipitalSpleniumInput.vtk}
+  -o ${Output}
+  --noNan
+)
+
 # Attribute at 0 Mask at 0 Crop at 0 Clean at 1 -> should return an error message
 ExternalData_Add_Test(FiberPostProcessData NAME FiberPostProcessTest0001 COMMAND $<TARGET_FILE:FiberProcessingTest>
   --compare

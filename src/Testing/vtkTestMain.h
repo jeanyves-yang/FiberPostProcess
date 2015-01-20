@@ -235,35 +235,30 @@ int RegressionTestPolyData( const char *testImageFilename ,
     }
     if( vtkpolydata2->GetCellData()->GetNumberOfArrays() != vtkpolydata1->GetCellData()->GetNumberOfArrays() )
     {
-        std::cout << "8" << std::endl ;
         return 8;
     }
     for( int i = 0 ; i < vtkpolydata2->GetCellData()->GetNumberOfArrays() ; i++ )
     {
         if( vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfTuples() != vtkpolydata1->GetCellData()->GetArray( i )->GetNumberOfTuples() )
         {
-            std::cout << "9" << std::endl ;
             return 9 ;
         }
         for( int j = 0 ; j < vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfTuples() ; j++ )
         {
             if( vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfComponents() != vtkpolydata1->GetCellData()->GetArray( i )->GetNumberOfComponents() )
             {
-                std::cout << "10"<<std::endl ;
                 return 10 ;
             }
             for( int k = 0 ; k < vtkpolydata2->GetCellData()->GetArray( i )->GetNumberOfComponents() ; k++ )
             {
                 if( vtkpolydata2->GetCellData()->GetArray( i )->GetComponent( j , k ) != vtkpolydata1->GetCellData()->GetArray( i )->GetComponent( j , k ) )
                 {
-                    std::cout << vtkpolydata2->GetCellData()->GetArray( i )->GetComponent( j , k ) << std::endl<<vtkpolydata1->GetCellData()->GetArray( i )->GetComponent( j , k ) << std::endl ;
-                    std::cout << "11" << std::endl ;
                     return 11 ;
                 }
             }
         }
     }
-        return 0;
+    return 0;
 }
 
 //
