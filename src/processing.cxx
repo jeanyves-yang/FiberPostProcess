@@ -15,7 +15,7 @@
 
 #include <itkImage.h>
 #include <itkImageFileReader.h>
-#include "itkImageToVTKImageFilter.h"
+//#include "itkImageToVTKImageFilter.h"
 
 
 #include <vtkImageWriter.h>
