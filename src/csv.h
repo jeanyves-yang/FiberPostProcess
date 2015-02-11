@@ -16,8 +16,8 @@ class csv
 public:
     csv() ;
     csv( char* ) ;
-    void read(char * ) ;
-    void write(char * ) ;
+    void read(const char * ) ;
+    void write(const char * ) ;
     void initData( std::vector< std::vector< std::string > > vecData ) ;
     void initHeader( std::vector< std::vector< std::string > > headerData ) ;
     void initRowsId( std::vector< std::string > rowsTitle ) ;
@@ -99,7 +99,7 @@ void csv::initColsId( std::vector< std::string > colsTitle )
     }
 }
 
-void csv::read( char* fname )
+void csv::read( const char* fname )
 {
 
     std::ifstream in ;
@@ -125,7 +125,7 @@ void csv::read( char* fname )
     in.close() ;
 }
 
-void csv::write( char* fname )
+void csv::write( const char* fname )
 {
     std::ofstream out ;
     out.open( fname , std::ofstream::out |std::ofstream::trunc ) ;
