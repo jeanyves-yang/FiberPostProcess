@@ -28,6 +28,8 @@ public:
     void SetCleanFlag( int cleanFlag ) ;
     void SetNoNanFlag( int noNanFlag ) ;
     void SetThresholdMode( std::string thresholdMode ) ;
+    void SetLengthMatchFlag( int lengthMatchFlag ) ;
+    void SetLengthMatchFiber(std::string lengthMatchFiber ) ;
     int run() ;
 
 protected:
@@ -53,6 +55,7 @@ protected:
     vtkSmartPointer< vtkPolyData > AddPointData( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkPolyData > CreateVisuFiber( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer<vtkPolyData> RemoveNanFibers( vtkSmartPointer< vtkPolyData > polyData ) ;
+    vtkSmartPointer< vtkPolyData > MatchLength( vtkSmartPointer< vtkPolyData > polyData , std::string MatchLengthFiber ) ;
 
 private:
     int FlagVisualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
@@ -65,6 +68,8 @@ private:
     int FlagCrop ;
     int FlagClean ;
     int FlagNoNan ;
+    int FlagLengthMatch ;
     float Threshold ;
+    std::string LengthMatchFiber ;
     std::string ThresholdMode ;
 };

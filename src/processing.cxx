@@ -117,6 +117,14 @@ void processing::SetNoNanFlag( int noNanFlag )
 {
     FlagNoNan = noNanFlag ;
 }
+void processing::SetLengthMatchFlag( int lengthMatchFlag )
+{
+    FlagLengthMatch = lengthMatchFlag ;
+}
+void processing::SetLengthMatchFiber(std::string lengthMatchFiber )
+{
+    LengthMatchFiber = lengthMatchFiber ;
+}
 void processing::WriteLogFile( processing::fileNameStruct fileName , std::vector< std::vector< float> > vecPointData ,
                                vtkSmartPointer< vtkPolyData > fiberFile , std::vector< float > cumul , std::vector< float > average )
 {
@@ -735,6 +743,81 @@ vtkSmartPointer<vtkPolyData> processing::RemoveNanFibers( vtkSmartPointer< vtkPo
     return FinalPolyData;
 }
 
+vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPolyData > polyData , std::string MatchLengthFiber )
+{
+    vtkSmartPointer< vtkPolyData > matchLengthPolyData ;
+    std::string extension = ExtensionOfFile( MatchLengthFiber ) ;
+    if( extension.rfind("vtk") != std::string::npos )
+    {
+        vtkSmartPointer< vtkPolyDataReader > fiberPolyDataReader = vtkSmartPointer< vtkPolyDataReader >::New() ;
+        matchLengthPolyData = ReadFiberFile( fiberPolyDataReader, MatchLengthFiber ) ;
+    }
+    else if( extension.rfind("vtp") != std::string::npos )
+    {
+        vtkSmartPointer<vtkXMLPolyDataReader> fiberPolyDataReader = vtkSmartPointer< vtkXMLPolyDataReader >::New() ;
+        matchLengthPolyData = ReadFiberFile( fiberPolyDataReader, MatchLengthFiber ) ;
+    }
+    else
+    {
+        std::cerr << "lengthMatch File could not be read" << std::endl ;
+        return polyData ;
+    }
+    vtkSmartPointer< vtkPolyData > newPolyData ;
+    vtkSmartPointer<vtkFloatArray> NewTensors=vtkSmartPointer<vtkFloatArray>::New();
+    vtkSmartPointer<vtkPoints> NewPoints=vtkSmartPointer<vtkPoints>::New();
+    vtkSmartPointer<vtkCellArray> NewLines=vtkSmartPointer<vtkCellArray>::New();
+    NewTensors->SetNumberOfComponents(9);
+    vtkDataArray* Tensors=polyData->GetPointData()->GetTensors();
+    vtkPoints* Points=polyData->GetPoints();
+    vtkCellArray* Lines=polyData->GetLines();
+    vtkIdType* Ids;
+    vtkIdType NumberOfPoints;
+    int NewId=0;
+    Lines->InitTraversal();
+    int min, max ;
+    min = matchLengthPolyData->GetCell( 0 )->GetNumberOfPoints() ;
+    max = matchLengthPolyData->GetCell( 0 )->GetNumberOfPoints() ;
+    int nbLines = matchLengthPolyData->GetNumberOfLines() ;
+    for( int i = 0 ; i < nbLines ; i++  )
+    {
+        int nbPoints = matchLengthPolyData->GetCell( i )->GetNumberOfPoints() ;
+        if( min > nbPoints )
+        {
+            min = nbPoints ;
+        }
+        if(max < nbPoints )
+        {
+            max = nbPoints ;
+        }
+    }
+    for( int i=0; Lines->GetNextCell( NumberOfPoints , Ids ) ; i++ )
+       {
+        vtkSmartPointer<vtkPolyLine> NewLine=vtkSmartPointer<vtkPolyLine>::New() ;
+        NewLine->GetPointIds()->SetNumberOfIds( NumberOfPoints ) ;
+        if( NumberOfPoints > min && NumberOfPoints < max )
+        {std::cout<<NumberOfPoints<<" ";
+            for( int j=0; j < NumberOfPoints ; j++ )
+            {  std::cout<<j<<" ";
+                NewPoints->InsertNextPoint( Points->GetPoint(Ids[ j ] ) ) ;
+                NewLine->GetPointIds()->SetId( j , NewId ) ;
+                NewId++ ;
+               /* double tensorValue[9] ;
+                for( int k = 0 ; k < 9 ; k++ )
+                {
+                    tensorValue[ k ] = Tensors->GetComponent( Ids[ j ] , k ) ;
+                }
+                NewTensors->InsertNextTuple(tensorValue);*/
+            }
+           std::cout<<std::endl;
+            NewLines->InsertNextCell(NewLine);
+        }
+    }
+    newPolyData->SetPoints(NewPoints);
+    //newPolyData->GetPointData()->SetTensors(NewTensors);
+    newPolyData->SetLines(NewLines);
+    return newPolyData ;
+}
+
 int processing::run()
 {
     processing::fileNameStruct fileName ;
@@ -806,11 +889,15 @@ int processing::run()
 
         }
     }
-    if( FlagThreshold ==true && FlagMask == true )
+    if( FlagThreshold == true && FlagMask == true )
     {
         cleanedFiberPolyData = CleanFiber( cleanedFiberPolyData , Threshold ) ;
     }
-    WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
-    WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
+    if( FlagLengthMatch == true )
+    {
+        cleanedFiberPolyData = MatchLength( cleanedFiberPolyData , LengthMatchFiber ) ;
+    }
+    //WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
+    //WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
     return 0 ;
 }
