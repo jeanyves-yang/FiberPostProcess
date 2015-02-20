@@ -745,7 +745,7 @@ vtkSmartPointer<vtkPolyData> processing::RemoveNanFibers( vtkSmartPointer< vtkPo
 
 vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPolyData > polyData , std::string MatchLengthFiber )
 {
-    vtkSmartPointer< vtkPolyData > matchLengthPolyData ;
+    vtkSmartPointer< vtkPolyData > matchLengthPolyData = vtkSmartPointer<vtkPolyData>::New() ;
     std::string extension = ExtensionOfFile( MatchLengthFiber ) ;
     if( extension.rfind("vtk") != std::string::npos )
     {
@@ -762,7 +762,7 @@ vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPoly
         std::cerr << "lengthMatch File could not be read" << std::endl ;
         return polyData ;
     }
-    vtkSmartPointer< vtkPolyData > newPolyData ;
+    vtkSmartPointer< vtkPolyData > newPolyData = vtkSmartPointer<vtkPolyData>::New();
     vtkSmartPointer<vtkFloatArray> NewTensors=vtkSmartPointer<vtkFloatArray>::New();
     vtkSmartPointer<vtkPoints> NewPoints=vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkCellArray> NewLines=vtkSmartPointer<vtkCellArray>::New();
@@ -790,30 +790,29 @@ vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPoly
             max = nbPoints ;
         }
     }
-    for( int i=0; Lines->GetNextCell( NumberOfPoints , Ids ) ; i++ )
-       {
+    for( int j=0; Lines->GetNextCell( NumberOfPoints , Ids ) ; j++ )
+    {
         vtkSmartPointer<vtkPolyLine> NewLine=vtkSmartPointer<vtkPolyLine>::New() ;
         NewLine->GetPointIds()->SetNumberOfIds( NumberOfPoints ) ;
         if( NumberOfPoints > min && NumberOfPoints < max )
-        {std::cout<<NumberOfPoints<<" ";
-            for( int j=0; j < NumberOfPoints ; j++ )
-            {  std::cout<<j<<" ";
-                NewPoints->InsertNextPoint( Points->GetPoint(Ids[ j ] ) ) ;
-                NewLine->GetPointIds()->SetId( j , NewId ) ;
+        {
+            for( int k = 0 ; k < NumberOfPoints ; k++ )
+            {
+                NewPoints->InsertNextPoint( Points->GetPoint(Ids[ k ] ) ) ;
+                NewLine->GetPointIds()->SetId( k , NewId ) ;
                 NewId++ ;
-               /* double tensorValue[9] ;
-                for( int k = 0 ; k < 9 ; k++ )
+                double tensorValue[9] ;
+                for( int l = 0 ; l < 9 ; l++ )
                 {
-                    tensorValue[ k ] = Tensors->GetComponent( Ids[ j ] , k ) ;
+                    tensorValue[ l ] = Tensors->GetComponent( Ids[ k ] , l ) ;
                 }
-                NewTensors->InsertNextTuple(tensorValue);*/
+                NewTensors->InsertNextTuple(tensorValue);
             }
-           std::cout<<std::endl;
             NewLines->InsertNextCell(NewLine);
         }
     }
     newPolyData->SetPoints(NewPoints);
-    //newPolyData->GetPointData()->SetTensors(NewTensors);
+    newPolyData->GetPointData()->SetTensors(NewTensors);
     newPolyData->SetLines(NewLines);
     return newPolyData ;
 }
@@ -897,7 +896,7 @@ int processing::run()
     {
         cleanedFiberPolyData = MatchLength( cleanedFiberPolyData , LengthMatchFiber ) ;
     }
-    //WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
-    //WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
+    WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
+    WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
     return 0 ;
 }
