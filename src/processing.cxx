@@ -798,34 +798,60 @@ vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPoly
         std::cerr << "lengthMatch File could not be read" << std::endl ;
         return polyData ;
     }
-    vtkSmartPointer< vtkPolyData > newPolyData = vtkSmartPointer<vtkPolyData>::New();
-    vtkSmartPointer<vtkFloatArray> NewTensors=vtkSmartPointer<vtkFloatArray>::New();
-    vtkSmartPointer<vtkPoints> NewPoints=vtkSmartPointer<vtkPoints>::New();
-    vtkSmartPointer<vtkCellArray> NewLines=vtkSmartPointer<vtkCellArray>::New();
-    NewTensors->SetNumberOfComponents(9);
-    vtkDataArray* Tensors=polyData->GetPointData()->GetTensors();
-    vtkPoints* Points=polyData->GetPoints();
-    vtkCellArray* Lines=polyData->GetLines();
-    vtkIdType* Ids;
-    vtkIdType NumberOfPoints;
-    int NewId=0;
-    Lines->InitTraversal();
-    int min, max ;
-    min = matchLengthPolyData->GetCell( 0 )->GetNumberOfPoints() ;
-    max = matchLengthPolyData->GetCell( 0 )->GetNumberOfPoints() ;
+    vtkSmartPointer< vtkPolyData > newPolyData = vtkSmartPointer<vtkPolyData>::New() ;
+    vtkSmartPointer<vtkFloatArray> NewTensors=vtkSmartPointer<vtkFloatArray>::New() ;
+    vtkSmartPointer<vtkPoints> NewPoints=vtkSmartPointer<vtkPoints>::New() ;
+    vtkSmartPointer<vtkCellArray> NewLines=vtkSmartPointer<vtkCellArray>::New() ;
+    NewTensors->SetNumberOfComponents( 9 ) ;
+    vtkDataArray* Tensors = polyData->GetPointData()->GetTensors() ;
+    vtkPoints* Points = vtkPoints::New() ;
+    Points = matchLengthPolyData->GetPoints() ;
+    vtkCellArray* Lines = vtkCellArray::New() ;
+    Lines = matchLengthPolyData->GetLines() ;
+    vtkIdType* Ids ;
+    vtkIdType NumberOfPoints ;
+    int NewId = 0 ;
+    Lines->InitTraversal() ;
+    int min , max ;
     int nbLines = matchLengthPolyData->GetNumberOfLines() ;
+    double fiberLength, step ;
     for( int i = 0 ; i < nbLines ; i++  )
     {
-        int nbPoints = matchLengthPolyData->GetCell( i )->GetNumberOfPoints() ;
-        if( min > nbPoints )
+        Lines->GetNextCell( NumberOfPoints , Ids ) ;
+        fiberLength = 0 ;
+        for( unsigned int pointId=0 ; pointId+1< NumberOfPoints ; pointId++ )
         {
-            min = nbPoints ;
+            double Point1[ 3 ] , Point2[ 3 ] , x , y , z ;
+            Points->GetPoint( Ids[ pointId ], Point1 ) ;
+            Points->GetPoint( Ids[ pointId + 1 ] , Point2 ) ;
+            x = Point2[ 0 ]- Point1[ 0 ] ;
+            y = Point2[ 1 ]- Point1[ 1 ] ;
+            z = Point2[ 2 ]- Point1[ 2 ] ;
+            //Distance between two successive points
+            step = sqrt( x * x + y * y + z * z ) ;
+            //Distance between first point and last calculated one.
+            fiberLength += step ;
         }
-        if(max < nbPoints )
+        if( i == 0 )
         {
-            max = nbPoints ;
+            min = fiberLength ;
+            max = fiberLength ;
+        }
+        else
+        {
+            if( min > fiberLength )
+            {
+                min = fiberLength ;
+            }
+            if(max < fiberLength )
+            {
+                max = fiberLength ;
+            }
         }
     }
+    Points = polyData->GetPoints() ;
+    Lines = polyData->GetLines() ;
+    Lines->InitTraversal() ;
     for( int j=0; Lines->GetNextCell( NumberOfPoints , Ids ) ; j++ )
     {
         vtkSmartPointer<vtkPolyLine> NewLine=vtkSmartPointer<vtkPolyLine>::New() ;
