@@ -15,8 +15,7 @@
 
 #include <itkImage.h>
 #include <itkImageFileReader.h>
-//#include "itkImageToVTKImageFilter.h"
-
+#include <itksys/SystemTools.hxx>
 
 #include <vtkImageWriter.h>
 #include <itkPoint.h>
@@ -38,6 +37,8 @@
 
 #include <vtkMath.h>
 #include <vtkCellLocator.h>
+
+#include <vtkZLibDataCompressor.h>
 
 /* allocate memory for an nrow x ncol matrix */
 template< class TReal>
@@ -211,24 +212,59 @@ vtkSmartPointer< vtkPolyData > processing::ReadFiberFile( T reader , std::string
     return PolyData ;
 }
 
-void processing::WriteFiberFile( vtkSmartPointer< vtkPolyData > polyData , std::string outputFileName )
+int processing::WriteFiberFile( std::string encoding , std::string extension , const char* outputFileName ,
+                int compressionLevel , vtkSmartPointer< vtkPolyData > readerPolyData )
 {
-    std::string extension = ExtensionOfFile( outputFileName ) ;
-    if( extension.rfind( "vtk" ) != std::string::npos )
-    {
-        vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
-        writer->SetInputData( polyData ) ;
-        writer->SetFileName( outputFileName.c_str() ) ;
-        writer->Update() ;
-    }
-    else if( extension.rfind("vtp") != std::string::npos )
-    {
-        vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer< vtkXMLPolyDataWriter >::New() ;
-        writer->SetInputData( polyData ) ;
-        writer->SetDataModeToBinary() ;
-        writer->SetFileName( outputFileName.c_str() ) ;
-        writer->Update() ;
-    }
+    if( extension == "vtp" )
+        {
+            vtkSmartPointer< vtkXMLPolyDataWriter > writer = vtkSmartPointer< vtkXMLPolyDataWriter >::New() ;
+            writer->SetFileName( outputFileName ) ;
+            writer->SetInputData( readerPolyData ) ;
+            vtkZLibDataCompressor *compressor = dynamic_cast< vtkZLibDataCompressor* > ( writer->GetCompressor() ) ;
+            if( compressor )
+            {
+                compressor->SetCompressionLevel( compressionLevel ) ;
+            }
+            if( encoding == "binary" )
+            {
+                writer->SetDataModeToBinary() ;
+            }
+            else if( encoding == "appended" )
+            {
+                writer->SetDataModeToAppended() ;
+            }
+            else if( encoding == "ascii" )
+            {
+                writer->SetDataModeToAscii() ;
+            }
+            else // should not arrive here. tested in main before already and program should exit at that time.
+            {
+                return -1 ;
+            }
+            writer->Update() ;
+            return writer->GetErrorCode() ;
+        }
+        else
+        {
+            vtkSmartPointer< vtkPolyDataWriter > writer = vtkSmartPointer< vtkPolyDataWriter >::New() ;
+            writer->SetFileName( outputFileName ) ;
+            writer->SetInputData( readerPolyData ) ;
+            if( encoding =="binary" )
+            {
+                writer->SetFileTypeToBinary();
+            }
+            else if( encoding == "ascii" )
+            {
+                writer->SetFileTypeToASCII() ;
+            }
+            else
+            {
+                return -1 ;
+            }
+
+            writer->Update() ;
+            return writer->GetErrorCode() ;
+        }
 }
 
 /*std::vector< int > processing::CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData )
@@ -865,17 +901,21 @@ int processing::run()
         cleanedFiberPolyData->GetPointData()->AddArray( pointData ) ;
     }
     cleanedFiberPolyData = CheckNaN( cleanedFiberPolyData ) ;
+    extension = ExtensionOfFile( OutputFileName ) ;
     if( extension.rfind( "vtk" ) != std::string::npos )
     {
         fileName.visu =  ChangeEndOfFileName( OutputFileName , "-visu.vtk" ) ;
     }
-    else if( extension.rfind("vtp") != std::string::npos )
+    else if( extension.rfind( "vtp" ) != std::string::npos )
     {
         fileName.visu = ChangeEndOfFileName( OutputFileName , "-visu.vtp" ) ;
     }
+    std::string encoding = "binary" ;
+
+    int compressionLevel = 1 ;
     if( FlagVisualize )
     {
-        WriteFiberFile( cleanedFiberPolyData , fileName.visu ) ;
+        WriteFiberFile( encoding , extension , fileName.visu.c_str() , compressionLevel , cleanedFiberPolyData ) ;
     }
     if( FlagAttribute == true )
     {
@@ -897,6 +937,6 @@ int processing::run()
         cleanedFiberPolyData = MatchLength( cleanedFiberPolyData , LengthMatchFiber ) ;
     }
     WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
-    WriteFiberFile( cleanedFiberPolyData , fileName.output ) ;
+    WriteFiberFile( encoding , extension , fileName.output.c_str() , compressionLevel , cleanedFiberPolyData ) ;
     return 0 ;
 }

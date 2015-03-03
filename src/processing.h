@@ -38,7 +38,8 @@ protected:
     int FindMaxNbOfPoints( vtkSmartPointer< vtkPolyData > polyData ) ;
     template< class T>
     vtkSmartPointer< vtkPolyData > ReadFiberFile( T reader , std::string fiberFile ) ;
-    void WriteFiberFile( vtkSmartPointer< vtkPolyData > PolyData , std::string outputFileName ) ;
+    int WriteFiberFile( std::string encoding , std::string extension , const char* outputFileName ,
+                        int compressionLevel , vtkSmartPointer< vtkPolyData > readerPolyData ) ;
     int GetPointId( int fiberId, int pointId , vtkSmartPointer< vtkPolyData > polyData ) ;
     std::vector<int> CheckNaN( vtkSmartPointer< vtkPolyData > polyData , std::vector< std::vector< float > > vecPointData ) ;//change name
     vtkSmartPointer< vtkPolyData > CheckNaN( vtkSmartPointer< vtkPolyData > polyData ) ;
