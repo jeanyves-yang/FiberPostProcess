@@ -602,7 +602,7 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     vtkSmartPointer< vtkDoubleArray > newTensors = vtkSmartPointer< vtkDoubleArray >::New() ;
     newTensors->SetName( "tensors" ) ;
     newTensors->SetNumberOfComponents( 9 ) ;
-    vtkSmartPointer< vtkDataArray > tensors = polyData->GetPointData()->GetArray( "tensors" ) ;
+    vtkSmartPointer< vtkDataArray > tensors = polyData->GetPointData()->GetTensors() ;
     vtkSmartPointer< vtkPolyData > newPolyData = vtkSmartPointer< vtkPolyData >::New() ;
     vtkSmartPointer<vtkPoints> newPoints = vtkSmartPointer<vtkPoints>::New() ;
     vtkSmartPointer<vtkCellArray> newLines = vtkSmartPointer<vtkCellArray>::New() ;
@@ -621,10 +621,6 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
     for( int i = 0 ; i < nbLines ; i++ )
     {
         int nbPoints = polyData->GetCell( i )->GetNumberOfPoints() ;
-        for( int j = 0 ; j < nbPoints ; j++ )
-        {
-            newTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( i , j , polyData ) ) ) ;
-        }
         vtkSmartPointer< vtkPolyLine > newLine = vtkSmartPointer< vtkPolyLine >::New() ;
         newLine->GetPointIds()->SetNumberOfIds( nbPoints ) ;
         if( ThresholdMode == "above" )
@@ -637,6 +633,7 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
             {
                 for( int j = 0 ; j < nbPoints ; j ++ )
                 {
+                    newTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( i , j , polyData ) ) ) ;
                     newPoints->InsertNextPoint( points->GetPoint( polyData->GetCell( i )->GetPointId( j ) ) ) ;
                     newLine->GetPointIds()->SetId( j , newId ) ;
                     newId++ ;
@@ -655,6 +652,7 @@ vtkSmartPointer< vtkPolyData > processing::CleanFiber( vtkSmartPointer< vtkPolyD
             {
                 for( int j = 0 ; j < nbPoints ; j ++ )
                 {
+                    newTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( i , j , polyData ) ) ) ;
                     newPoints->InsertNextPoint( points->GetPoint( polyData->GetCell( i )->GetPointId( j ) ) ) ;
                     newLine->GetPointIds()->SetId( j , newId ) ;
                     newId++ ;
