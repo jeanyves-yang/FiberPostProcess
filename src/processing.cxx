@@ -826,7 +826,7 @@ vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPoly
     Lines->InitTraversal() ;
     int min , max ;
     int nbLines = matchLengthPolyData->GetNumberOfLines() ;
-    double fiberLength, step ;
+    double fiberLength ;
     for( int i = 0 ; i < nbLines ; i++  )
     {
         Lines->GetNextCell( NumberOfPoints , Ids ) ;
@@ -853,7 +853,7 @@ vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPoly
     vtkSmartPointer<vtkPoints> NewPoints=vtkSmartPointer<vtkPoints>::New() ;
     vtkSmartPointer<vtkCellArray> NewLines=vtkSmartPointer<vtkCellArray>::New() ;
     NewTensors->SetNumberOfComponents( 9 ) ;
-    vtkDataArray* Tensors = polyData->GetPointData()->GetTensors() ;
+    vtkDataArray* tensors = polyData->GetPointData()->GetTensors() ;
     Lines = polyData->GetLines() ;
     Lines->InitTraversal() ;
     vtkPoints* Points = vtkPoints::New() ;
@@ -870,19 +870,14 @@ vtkSmartPointer< vtkPolyData > processing::MatchLength( vtkSmartPointer< vtkPoly
                 NewPoints->InsertNextPoint( Points->GetPoint(Ids[ k ] ) ) ;
                 NewLine->GetPointIds()->SetId( k , NewId ) ;
                 NewId++ ;
-                double tensorValue[9] ;
-                for( int l = 0 ; l < 9 ; l++ )
-                {
-                    tensorValue[ l ] = Tensors->GetComponent( Ids[ k ] , l ) ;
-                }
-                NewTensors->InsertNextTuple(tensorValue);
+                NewTensors->InsertNextTuple( tensors->GetTuple9( GetPointId( j , k , polyData ) ) ) ;
             }
-            NewLines->InsertNextCell(NewLine);
+            NewLines->InsertNextCell( NewLine ) ;
         }
     }
-    newPolyData->SetPoints(NewPoints);
-    newPolyData->GetPointData()->SetTensors(NewTensors);
-    newPolyData->SetLines(NewLines);
+    newPolyData->SetPoints( NewPoints ) ;
+    newPolyData->GetPointData()->SetTensors( NewTensors ) ;
+    newPolyData->SetLines( NewLines ) ;
     return newPolyData ;
 }
 
@@ -967,7 +962,7 @@ int processing::run()
     }
     if( FlagLengthMatch == true )
     {
-        cleanedFiberPolyData = MatchLength( cleanedFiberPolyData , LengthMatchFiber ) ;
+        //cleanedFiberPolyData = MatchLength( cleanedFiberPolyData , LengthMatchFiber ) ;
     }
     WriteLogFile( fileName , vecPointData , cleanedFiberPolyData , cumul , average ) ;
     WriteFiberFile( encoding , extension , fileName.output.c_str() , compressionLevel , cleanedFiberPolyData ) ;
