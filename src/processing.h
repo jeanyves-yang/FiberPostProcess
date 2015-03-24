@@ -16,6 +16,8 @@ public:
     };
 
     processing() ;
+    void SetDistanceMap( std::string distanceMap ) ;
+    void SetDistanceMapFlag( int distanceMapFlag ) ;
     void SetInputFileName( std::string inputFiberFileName ) ;
     void SetOutputFileName( std::string outputFiberFileName ) ;
     void SetVisualisation( int visualisationFlag ) ;
@@ -30,6 +32,7 @@ public:
     void SetThresholdMode( std::string thresholdMode ) ;
     void SetLengthMatchFlag( int lengthMatchFlag ) ;
     void SetLengthMatchFiber(std::string lengthMatchFiber ) ;
+    void SetMaxDistance( float maxDistance ) ;
     int run() ;
 
 protected:
@@ -58,6 +61,7 @@ protected:
     vtkSmartPointer<vtkPolyData> RemoveNanFibers( vtkSmartPointer< vtkPolyData > polyData ) ;
     vtkSmartPointer< vtkPolyData > MatchLength( vtkSmartPointer< vtkPolyData > polyData , std::string MatchLengthFiber ) ;
     double ComputeFiberLength( vtkSmartPointer< vtkPolyData > polyData , vtkIdType NumberOfPoints , vtkIdType* Ids ) ;
+    vtkSmartPointer< vtkPolyData > DistanceMap( vtkSmartPointer< vtkPolyData > polyData ) ;
 
 private:
     int FlagVisualize ; // enables the writing of a vtk file visualizable through Slicer or another visualizer (removes the tensors, point data fields are not visualizable if tensors are present in the vtk file)
@@ -71,7 +75,10 @@ private:
     int FlagClean ;
     int FlagNoNan ;
     int FlagLengthMatch ;
+    int FlagDistanceMap ;
+    float MaxDistance ;
     float Threshold ;
     std::string LengthMatchFiber ;
     std::string ThresholdMode ;
+    std::string DistanceMapName ;
 };

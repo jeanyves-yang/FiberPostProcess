@@ -105,6 +105,23 @@
            <description>Use the file given to match the length of the fibers of the input fiber bundle file.</description>
         </image>
 
+        <image>
+           <name>distanceMap</name>
+           <longflag>distanceMap</longflag>
+           <label>Distance Map File Name</label>
+           <channel>input</channel>
+           <flag>d</flag>
+           <description>distance map filename in .nrrd, .nhdr, etc, created by a reference fiber. it is used to take out fibers in the input fiber bundle if it differs too much from a reference fiber. </description>
+        </image>
+
+        <float>
+           <name>maxDistance</name>
+           <longflag>maxDistance</longflag>
+           <label>Maximum distance</label>
+           <channel>input</channel>
+           <description>Act as a threshold for the fiber bundle: if a fiber has a distance (obtained via the distance map parameter) superior to this value, it gets kicked out.</description>
+        </float>
+
    </parameters>
 
 </executable>

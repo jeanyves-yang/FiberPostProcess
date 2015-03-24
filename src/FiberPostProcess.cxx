@@ -24,6 +24,7 @@ int main( int argc , char* argv[] )
   bool attributeFlag = false ;
   bool thresholdFlag = false ;
   bool lengthMatchFlag = false ;
+  bool distanceMapFlag = false ;
   if( !attributeFileName.empty() )
   {
       attributeFlag = true ;
@@ -40,6 +41,13 @@ int main( int argc , char* argv[] )
       if( !strcmp( argv[ i ] , "--lengthMatch" ) || !strcmp( argv[ i ] , "-l" )  )
       {
           lengthMatchFlag = true ;
+      }
+  }
+  for( int i = 0 ; i < argc ; i++ )
+  {
+      if( !strcmp( argv[ i ] , "--distanceMap" ) || !strcmp( argv[ i ] , "-d" )  )
+      {
+          distanceMapFlag = true ;
       }
   }
   processing FiberProcessing ;
@@ -59,6 +67,9 @@ int main( int argc , char* argv[] )
               return EXIT_FAILURE ;
           }
   }
+  FiberProcessing.SetMaxDistance( maxDistance ) ;
+  FiberProcessing.SetDistanceMap( distanceMap ) ;
+  FiberProcessing.SetDistanceMapFlag( distanceMapFlag ) ;
   FiberProcessing.SetInputFileName( inputFiberFileName ) ;
   FiberProcessing.SetOutputFileName( outputFiberFileName ) ;
   FiberProcessing.SetVisualisation( visualisationFlag ) ;
